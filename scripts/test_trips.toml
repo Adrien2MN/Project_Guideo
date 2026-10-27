@@ -1,0 +1,21 @@
+# Reference trips used to develop and test Guideo.
+# Coordinates are (lon, lat). Careful: Google Maps shows "lat, lon", here it is lon first.
+# "when" is optional (format 2026-10-28T18:30). Without it, the next departure from now is used.
+
+[[trip]]
+name = "henri_martin_to_arkose_issy"
+from = [2.271931268663908, 48.86413051088393]
+to   = [2.2640660549617184, 48.826504523026806]
+note = "Expected: Vélib downhill to Javel, then RER C direct (instead of C + reversal at Champ de Mars)."
+
+[[trip]]
+name = "arkose_issy_to_henri_martin"
+from = [2.2640660549617184, 48.826504523026806]
+to   = [2.271931268663908, 48.86413051088393]
+note = "Expected: RER C to Champ de Mars, walk across Bir-Hakeim, Vélib from Passy downhill."
+
+[[trip]]
+name = "henri_martin_to_montparnasse"
+from = [2.271931268663908, 48.86413051088393]
+to   = [2.324393615105085, 48.84330593412759]
+note = "Expected: Vélib to Passy or Trocadéro, then line 6 (instead of line 9 + transfer)."

@@ -1,0 +1,32 @@
+{
+  "lastUpdatedOther": 1761497400,
+  "ttl": 3600,
+  "data": {
+    "stations": [
+      {
+        "stationCode": "16107",
+        "station_id": 213688169,
+        "num_bikes_available": 4,
+        "numBikesAvailable": 4,
+        "num_bikes_available_types": [{"mechanical": 3}, {"ebike": 1}],
+        "num_docks_available": 31,
+        "numDocksAvailable": 31,
+        "is_installed": 1,
+        "is_returning": 1,
+        "is_renting": 1,
+        "last_reported": 1761497350
+      },
+      {
+        "stationCode": "6015",
+        "station_id": 99950133,
+        "num_bikes_available": 0,
+        "num_bikes_available_types": [{"mechanical": 0}, {"ebike": 0}],
+        "num_docks_available": 55,
+        "is_installed": 1,
+        "is_returning": 1,
+        "is_renting": 1,
+        "last_reported": 1761497300
+      }
+    ]
+  }
+}
