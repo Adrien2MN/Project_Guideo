@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guideo – étiquetage</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #f6f6f4; --panel: #ffffff; --ink: #1c1c1a; --muted: #6b6b66; --line: #e2e1dc;
+    --accent: #1f6feb; --sel: rgba(31,111,235,.12); --grid: #ecebe6; --speed: #1c1c1a;
+    --alt: #b45309; --hr: #be123c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #161615; --panel: #1f1f1d; --ink: #ecebe6; --muted: #9b9a94; --line: #34342f;
+      --accent: #58a6ff; --sel: rgba(88,166,255,.16); --grid: #2a2a27; --speed: #ecebe6;
+      --alt: #f59e0b; --hr: #fb7185;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .app { display: grid; grid-template-columns: 250px 1fr 300px; height: 100vh; }
+  aside, .side { background: var(--panel); overflow: auto; }
+  aside { border-right: 1px solid var(--line); }
+  .side { border-left: 1px solid var(--line); padding: 12px; }
+  h1 { font-size: 15px; margin: 0; padding: 12px; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+    margin: 16px 0 6px; }
+  h2:first-child { margin-top: 0; }
+  .trace { padding: 8px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .trace:hover { background: var(--sel); }
+  .trace.active { background: var(--sel); box-shadow: inset 3px 0 0 var(--accent); }
+  .trace .when { font-weight: 600; }
+  .trace .meta { color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; }
+  .bar { display: flex; height: 5px; margin-top: 5px; border-radius: 3px; overflow: hidden; background: var(--line); }
+  main { display: grid; grid-template-rows: 1fr 250px; min-width: 0; }
+  #map { min-height: 0; }
+  .chartwrap { position: relative; border-top: 1px solid var(--line); background: var(--panel); }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  #readout { position: absolute; top: 22px; right: 48px; font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; pointer-events: none; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .mode { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border: 1px solid var(--line);
+    border-radius: 6px; background: transparent; color: var(--ink); font: inherit; font-size: 13px;
+    cursor: pointer; text-align: left; }
+  .mode:hover { border-color: var(--accent); }
+  .mode .sw { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+  .mode kbd { margin-left: auto; color: var(--muted); font-size: 11px; }
+  .seg { display: grid; grid-template-columns: 12px 1fr auto; gap: 8px; align-items: center;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .seg:hover { background: var(--sel); }
+  .seg.active { background: var(--sel); outline: 1px solid var(--accent); }
+  .seg .sw { width: 12px; height: 12px; border-radius: 3px; }
+  .seg small { color: var(--muted); display: block; font-variant-numeric: tabular-nums; }
+  .help { color: var(--muted); font-size: 12px; }
+  .help b { color: var(--ink); font-weight: 600; }
+  textarea { width: 100%; min-height: 54px; background: transparent; color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px; font: inherit; }
+  .btn { padding: 8px 10px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent);
+    color: #fff; font: inherit; font-weight: 600; cursor: pointer; width: 100%; margin-top: 6px; }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .row { display: flex; gap: 6px; }
+  .toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--ink);
+    color: var(--bg); padding: 8px 14px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.on { opacity: .92; }
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: auto 60vh auto; height: auto; }
+    aside { max-height: 30vh; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Guideo · étiquetage</h1>
+    <div id="traces"></div>
+  </aside>
+  <main>
+    <div id="map"></div>
+    <div class="chartwrap">
+      <canvas id="chart"></canvas>
+      <div id="readout"></div>
+    </div>
+  </main>
+  <div class="side">
+    <h2>Mode du morceau sélectionné</h2>
+    <div class="modes" id="modes"></div>
+    <h2>Morceaux</h2>
+    <div id="segs"></div>
+    <h2>Note</h2>
+    <textarea id="note" placeholder="Ex. : Henri Martin → Javel, Vélib mécanique, puis RER C"></textarea>
+    <h2>Enregistrer</h2>
+    <button class="btn" id="export">Exporter labels.json</button>
+    <div class="row">
+      <button class="btn ghost" id="importBtn">Importer…</button>
+    </div>
+    <input type="file" id="importFile" accept=".json" hidden>
+    <p class="help">Sauvegarde automatique dans ce navigateur. Exporte quand tu as fini et place le fichier dans <b>data\labels\</b>.</p>
+    <h2>Aide</h2>
+    <p class="help">
+      <b>Double-clic</b> sur le graphique ou la trace : couper ici.<br>
+      <b>Clic</b> : sélectionner un morceau, puis touche <b>1–0</b> ou bouton de mode.<br>
+      <b>Glisser</b> une coupure pour l'ajuster, <b>clic droit</b> dessus pour la supprimer.<br>
+      <b>← →</b> morceau précédent / suivant, <b>↑ ↓</b> trace précédente / suivante.<br>
+      Les zones hachurées sont des coupures de signal (souvent le métro).
+    </p>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const MODE_COLORS = {
+  "walk": "#475569", "velib-meca": "#16a34a", "velib-elec": "#2563eb", "bike": "#65a30d",
+  "metro": "#9333ea", "rer": "#dc2626", "tram": "#d97706", "bus": "#0d9488", "car": "#db2777",
+  "still": "#a8a29e", "unknown": "#737373"
+};
+const UNLABELLED = "#c4c4bc";
+const MODE_KEYS = Object.keys(DATA.modes);
+const STORE_KEY = "guideo-labels-v1";
+const tz = { timeZone: "Europe/Paris" };
+const fmtTime = s => new Date(s * 1000).toLocaleTimeString("fr-FR", { ...tz, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const fmtDay = s => new Date(s * 1000).toLocaleDateString("fr-FR", { ...tz, weekday: "short", day: "2-digit", month: "2-digit" });
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+// ---------- state ----------
+const traces = DATA.traces;
+const byId = Object.fromEntries(traces.map(t => [t.id, t]));
+let labels = {};          // id -> {cuts:[t], modes:[mode|null], note, updated}
+let cur = 0, selSeg = 0, selCut = -1, hoverT = null, drag = null;
+
+function fromSegments(tr, entry) {
+  const segs = [...(entry.segments || [])].sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  if (!segs.length) return null;
+  const t0 = tr.t[0], t1 = tr.t[tr.t.length - 1];
+  const cuts = [], modes = [];
+  let prevEnd = t0;
+  segs.forEach((s, i) => {
+    const a = Math.round(Date.parse(s.start) / 1000), b = Math.round(Date.parse(s.end) / 1000);
+    if (i === 0 && a > t0 + 1) { modes.push(null); cuts.push(a); }
+    else if (i > 0) {
+      if (a > prevEnd + 1) { cuts.push(prevEnd); modes.push(null); }
+      cuts.push(a);
+    }
+    modes.push(s.mode);
+    prevEnd = b;
+  });
+  if (prevEnd < t1 - 1) { cuts.push(prevEnd); modes.push(null); }
+  return { cuts, modes, note: entry.note || "", updated: entry.updated || null };
+}
+
+function initial(tr) {   // gap boundaries are certain cuts
+  const cuts = [];
+  for (const [a, b] of tr.gaps) { if (b - a > 2) cuts.push(a + 1, b - 1); }
+  return { cuts, modes: new Array(cuts.length + 1).fill(null), note: "", updated: null };
+}
+
+function loadState() {
+  let local = {};
+  try { local = JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); } catch (e) { local = {}; }
+  for (const tr of traces) {
+    const emb = DATA.labels[tr.id] ? fromSegments(tr, DATA.labels[tr.id]) : null;
+    const loc = local[tr.id] || null;
+    let pick = emb;
+    if (loc && (!emb || (loc.updated || "") > (emb.updated || ""))) pick = loc;
+    labels[tr.id] = pick || initial(tr);
+  }
+}
+function save() {
+  const cur_ = labels[traces[cur].id];
+  cur_.updated = new Date().toISOString();
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(labels)); } catch (e) { /* private mode */ }
+}
+
+const lab = () => labels[traces[cur].id];
+const T = () => traces[cur];
+function bounds() { const tr = T(); return [tr.t[0], ...lab().cuts, tr.t[tr.t.length - 1]]; }
+function segOf(t) { const b = bounds(); for (let i = 0; i < b.length - 1; i++) if (t < b[i + 1]) return i; return b.length - 2; }
+function nearestIdx(t) {
+  const a = T().t; let lo = 0, hi = a.length - 1;
+  while (hi - lo > 1) { const m = (lo + hi) >> 1; if (a[m] < t) lo = m; else hi = m; }
+  return (t - a[lo] < a[hi] - t) ? lo : hi;
+}
+
+function segStats(i) {
+  const tr = T(), b = bounds();
+  let dist = 0, n = 0;
+  for (let k = 1; k < tr.t.length; k++) {
+    if (tr.t[k] <= b[i] || tr.t[k - 1] >= b[i + 1]) continue;
+    const gap = tr.gaps.some(g => g[0] === tr.t[k - 1]);
+    if (!gap) dist += hav(tr.lat[k - 1], tr.lon[k - 1], tr.lat[k], tr.lon[k]);
+    n++;
+  }
+  const dur = b[i + 1] - b[i];
+  return { dur, dist, kmh: dur > 0 ? dist / dur * 3.6 : 0, n };
+}
+function hav(la1, lo1, la2, lo2) {
+  const r = Math.PI / 180, dLa = (la2 - la1) * r, dLo = (lo2 - lo1) * r;
+  const a = Math.sin(dLa / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin(dLo / 2) ** 2;
+  return 12742000 * Math.asin(Math.sqrt(a));
+}
+
+// ---------- edits ----------
+function addCut(t) {
+  const l = lab(), b = bounds();
+  if (t <= b[0] + 2 || t >= b[b.length - 1] - 2) return;
+  if (l.cuts.some(c => Math.abs(c - t) < 2)) return;
+  const i = segOf(t);
+  l.cuts.push(t); l.cuts.sort((x, y) => x - y);
+  l.modes.splice(i + 1, 0, l.modes[i]);
+  selSeg = i + 1; save(); renderAll();
+}
+function removeCut(k) {
+  const l = lab();
+  l.cuts.splice(k, 1);
+  const keep = l.modes[k] ?? l.modes[k + 1];
+  l.modes.splice(k, 2, keep);
+  selSeg = Math.min(selSeg, l.modes.length - 1); selCut = -1; save(); renderAll();
+}
+function setMode(m) {
+  lab().modes[selSeg] = m; save();
+  if (selSeg < lab().modes.length - 1) selSeg++;
+  renderAll();
+}
+
+// ---------- sidebar ----------
+function renderTraces() {
+  const el = document.getElementById("traces");
+  el.innerHTML = "";
+  traces.forEach((tr, i) => {
+    const l = labels[tr.id], b = [tr.t[0], ...l.cuts, tr.t[tr.t.length - 1]];
+    const total = b[b.length - 1] - b[0];
+    const done = l.modes.every(m => m), some = l.modes.some(m => m);
+    const div = document.createElement("div");
+    div.className = "trace" + (i === cur ? " active" : "");
+    const bar = l.modes.map((m, k) =>
+      `<span style="flex:${(b[k + 1] - b[k]) / total};background:${m ? MODE_COLORS[m] : UNLABELLED}"></span>`).join("");
+    div.innerHTML = `<div class="when">${fmtDay(tr.t[0])} · ${fmtTime(tr.t[0]).slice(0, 5)}</div>
+      <div class="meta"><span>${tr.name || tr.sport || ""} · ${Math.round(total / 60)} min</span>
+      <span>${done ? "✓" : some ? "…" : ""}</span></div><div class="bar">${bar}</div>`;
+    div.onclick = () => { cur = i; selSeg = 0; selCut = -1; renderAll(true); };
+    el.appendChild(div);
+  });
+}
+function renderModes() {
+  const el = document.getElementById("modes");
+  el.innerHTML = "";
+  MODE_KEYS.forEach((m, i) => {
+    const b = document.createElement("button");
+    b.className = "mode";
+    b.innerHTML = `<span class="sw" style="background:${MODE_COLORS[m]}"></span>${DATA.modes[m]}${i < 10 ? `<kbd>${(i + 1) % 10}</kbd>` : ""}`;
+    b.onclick = () => setMode(m);
+    el.appendChild(b);
+  });
+}
+function renderSegs() {
+  const el = document.getElementById("segs"), b = bounds();
+  el.innerHTML = "";
+  lab().modes.forEach((m, i) => {
+    const s = segStats(i);
+    const div = document.createElement("div");
+    div.className = "seg" + (i === selSeg ? " active" : "");
+    div.innerHTML = `<span class="sw" style="background:${m ? MODE_COLORS[m] : UNLABELLED}"></span>
+      <span>${m ? DATA.modes[m] : "<i>à étiqueter</i>"}<small>${fmtTime(b[i]).slice(0, 5)}–${fmtTime(b[i + 1]).slice(0, 5)}
+      · ${(s.dur / 60).toFixed(1)} min${s.n ? ` · ${(s.dist / 1000).toFixed(2)} km · ${s.kmh.toFixed(1)} km/h` : " · pas de point"}</small></span>`;
+    div.onclick = () => { selSeg = i; renderAll(); };
+    el.appendChild(div);
+  });
+  document.getElementById("note").value = lab().note || "";
+}
+
+// ---------- map ----------
+const map = L_init();
+function L_init() {
+  const m = window.L.map("map", { doubleClickZoom: false, zoomControl: true });
+  // OpenStreetMap's own tile servers refuse pages opened as local files, so we use
+  // providers that accept them. IGN tiles are free and need no key.
+  const ign = layer => "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0" +
+    `&LAYER=${layer}&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}`;
+  const IGN_ATTR = '© <a href="https://www.ign.fr">IGN</a> – Géoplateforme';
+  const layers = {
+    "Plan IGN": window.L.tileLayer(ign("GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2") + "&FORMAT=image/png",
+      { maxZoom: 19, attribution: IGN_ATTR }),
+    "Plan clair (CARTO)": window.L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      { maxZoom: 20, subdomains: "abcd",
+        attribution: "© contributeurs OpenStreetMap © CARTO" }),
+    "Photos aériennes IGN": window.L.tileLayer(ign("ORTHOIMAGERY.ORTHOPHOTOS") + "&FORMAT=image/jpeg",
+      { maxZoom: 19, attribution: IGN_ATTR }),
+  };
+  let chosen = "Plan IGN";
+  try { chosen = localStorage.getItem("guideo-basemap") || chosen; } catch (e) {}
+  (layers[chosen] || layers["Plan IGN"]).addTo(m);
+  window.L.control.layers(layers, null, { position: "topright" }).addTo(m);
+  m.on("baselayerchange", e => { try { localStorage.setItem("guideo-basemap", e.name); } catch (err) {} });
+  return m;
+}
+let mapLayer = null, hoverMarker = null, lastFit = null;
+function renderMap(fit) {
+  const tr = T(), b = bounds();
+  if (mapLayer) mapLayer.remove();
+  mapLayer = window.L.layerGroup().addTo(map);
+  for (let i = 0; i < b.length - 1; i++) {
+    const pts = [];
+    for (let k = 0; k < tr.t.length; k++) {
+      if (tr.t[k] < b[i] - 0.5 || tr.t[k] > b[i + 1] + 0.5) continue;
+      if (pts.length && tr.gaps.some(g => g[1] === tr.t[k])) { addLine(pts.slice(), i); pts.length = 0; }
+      pts.push([tr.lat[k], tr.lon[k]]);
+    }
+    if (pts.length > 1) addLine(pts, i);
+  }
+  const all = tr.lat.map((la, k) => [la, tr.lon[k]]);
+  window.L.circleMarker(all[0], { radius: 6, color: "#fff", weight: 2, fillColor: "#111", fillOpacity: 1 })
+    .bindTooltip("Départ").addTo(mapLayer);
+  window.L.circleMarker(all[all.length - 1], { radius: 6, color: "#111", weight: 2, fillColor: "#fff", fillOpacity: 1 })
+    .bindTooltip("Arrivée").addTo(mapLayer);
+  if (fit || lastFit !== tr.id) { map.invalidateSize(); map.fitBounds(all, { padding: [30, 30], animate: false, maxZoom: 17 }); lastFit = tr.id; }
+}
+function addLine(pts, i) {
+  const m = lab().modes[i];
+  window.L.polyline(pts, { color: "#ffffff", weight: i === selSeg ? 12 : 9, opacity: .9, interactive: false }).addTo(mapLayer);
+  const line = window.L.polyline(pts, {
+    color: m ? MODE_COLORS[m] : "#57534e", weight: i === selSeg ? 8 : 5, opacity: i === selSeg ? 1 : .85,
+    dashArray: m ? null : "6 6" }).addTo(mapLayer);
+  line.on("click", ev => { window.L.DomEvent.stop(ev); selSeg = i; renderAll(); });
+  line.on("dblclick", ev => { window.L.DomEvent.stop(ev); addCut(T().t[nearestPoint(ev.latlng)]); });
+}
+function nearestPoint(ll) {
+  const tr = T(); let best = 0, bd = Infinity;
+  for (let k = 0; k < tr.t.length; k++) {
+    const d = (tr.lat[k] - ll.lat) ** 2 + ((tr.lon[k] - ll.lng) * 0.66) ** 2;
+    if (d < bd) { bd = d; best = k; }
+  }
+  return best;
+}
+function showHover(t) {
+  const tr = T(), k = nearestIdx(t);
+  if (!hoverMarker) hoverMarker = window.L.circleMarker([0, 0], {
+    radius: 7, color: "#fff", weight: 2, fillColor: css("--accent"), fillOpacity: 1 }).addTo(map);
+  hoverMarker.setLatLng([tr.lat[k], tr.lon[k]]);
+  const v = tr.v[k], hr = tr.hr[k], z = tr.z[k];
+  document.getElementById("readout").textContent =
+    `${fmtTime(tr.t[k])} · ${v != null ? v.toFixed(1) + " km/h" : "–"}${z != null ? " · " + z.toFixed(0) + " m" : ""}${hr != null ? " · " + hr + " bpm" : ""}`;
+}
+
+// ---------- chart ----------
+const cv = document.getElementById("chart"), ctx = cv.getContext("2d");
+const PAD = { l: 40, r: 40, t: 26, b: 22 };
+let W = 0, H = 0;
+function resize() {
+  map.invalidateSize();
+  const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0); drawChart();
+}
+const x = t => { const tr = T(); return PAD.l + (t - tr.t[0]) / (tr.t[tr.t.length - 1] - tr.t[0]) * (W - PAD.l - PAD.r); };
+const tOf = px => { const tr = T(); return tr.t[0] + (px - PAD.l) / (W - PAD.l - PAD.r) * (tr.t[tr.t.length - 1] - tr.t[0]); };
+
+function drawChart() {
+  if (!W) return;
+  const tr = T(), b = bounds(), l = lab();
+  ctx.clearRect(0, 0, W, H);
+  const top = PAD.t, bot = H - PAD.b, ph = bot - top;
+  const vmax = Math.max(30, Math.ceil(Math.max(...tr.v.filter(v => v != null)) / 10) * 10);
+  const yv = v => bot - Math.min(v, vmax) / vmax * ph;
+
+  // segment backgrounds + top band
+  for (let i = 0; i < b.length - 1; i++) {
+    const m = l.modes[i], c = m ? MODE_COLORS[m] : UNLABELLED;
+    ctx.fillStyle = c; ctx.globalAlpha = i === selSeg ? .18 : .08;
+    ctx.fillRect(x(b[i]), top, x(b[i + 1]) - x(b[i]), ph);
+    ctx.globalAlpha = 1; ctx.fillRect(x(b[i]), 4, x(b[i + 1]) - x(b[i]), 14);
+    if (i === selSeg) { ctx.strokeStyle = css("--ink"); ctx.lineWidth = 2; ctx.strokeRect(x(b[i]) + 1, 4, x(b[i + 1]) - x(b[i]) - 2, 14); }
+    const w = x(b[i + 1]) - x(b[i]), label = m ? DATA.modes[m] : "?";
+    ctx.fillStyle = "#fff"; ctx.font = "600 11px system-ui";
+    if (w > ctx.measureText(label).width + 8) ctx.fillText(label, x(b[i]) + 4, 15);
+  }
+  // gaps hatched
+  ctx.save();
+  for (const [a, c] of tr.gaps) {
+    ctx.beginPath(); ctx.rect(x(a), top, x(c) - x(a), ph); ctx.clip();
+    ctx.strokeStyle = css("--muted"); ctx.globalAlpha = .35; ctx.lineWidth = 1;
+    for (let px = x(a) - ph; px < x(c); px += 7) { ctx.beginPath(); ctx.moveTo(px, bot); ctx.lineTo(px + ph, top); ctx.stroke(); }
+    ctx.restore(); ctx.save();
+  }
+  ctx.restore();
+  // grid + axis
+  ctx.strokeStyle = css("--grid"); ctx.fillStyle = css("--muted"); ctx.font = "11px system-ui"; ctx.lineWidth = 1;
+  for (let v = 0; v <= vmax; v += 10) {
+    ctx.beginPath(); ctx.moveTo(PAD.l, yv(v)); ctx.lineTo(W - PAD.r, yv(v)); ctx.stroke();
+    ctx.fillText(String(v), 8, yv(v) + 4);
+  }
+  const span = tr.t[tr.t.length - 1] - tr.t[0], step = span > 2400 ? 600 : span > 900 ? 300 : 120;
+  for (let t = Math.ceil(tr.t[0] / step) * step; t < tr.t[tr.t.length - 1]; t += step)
+    ctx.fillText(fmtTime(t).slice(0, 5), x(t) - 14, H - 6);
+  // series
+  const series = (arr, y, color, width) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); let pen = false;
+    for (let k = 0; k < tr.t.length; k++) {
+      const v = arr[k];
+      if (v == null || (k && tr.gaps.some(g => g[1] === tr.t[k]))) { pen = false; if (v == null) continue; }
+      pen ? ctx.lineTo(x(tr.t[k]), y(v)) : ctx.moveTo(x(tr.t[k]), y(v)); pen = true;
+    }
+    ctx.stroke();
+  };
+  const zs = tr.z.filter(v => v != null), hs = tr.hr.filter(v => v != null);
+  if (zs.length) {
+    const zmin = Math.min(...zs) - 2, zmax = Math.max(...zs) + 2;
+    series(tr.z, z => bot - (z - zmin) / (zmax - zmin) * ph, css("--alt"), 1.5);
+    ctx.fillStyle = css("--alt"); ctx.fillText(`${Math.round(zmax)} m`, W - PAD.r + 4, top + 8);
+    ctx.fillText(`${Math.round(zmin)} m`, W - PAD.r + 4, bot);
+  }
+  if (hs.length) {
+    const hmin = Math.min(...hs) - 5, hmax = Math.max(...hs) + 5;
+    ctx.globalAlpha = .5; series(tr.hr, h => bot - (h - hmin) / (hmax - hmin) * ph, css("--hr"), 1); ctx.globalAlpha = 1;
+  }
+  series(tr.v, yv, css("--speed"), 1.8);
+  // cuts
+  l.cuts.forEach((c, k) => {
+    ctx.strokeStyle = k === selCut ? css("--accent") : css("--ink"); ctx.lineWidth = k === selCut ? 3 : 1.5;
+    ctx.beginPath(); ctx.moveTo(x(c), 4); ctx.lineTo(x(c), bot); ctx.stroke();
+  });
+  // hover
+  if (hoverT != null) {
+    ctx.strokeStyle = css("--accent"); ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(x(hoverT), top); ctx.lineTo(x(hoverT), bot); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // legend
+  ctx.font = "11px system-ui"; let lx = PAD.l + 4; const ly = bot - 6;
+  for (const [txt, col] of [["vitesse (km/h)", css("--speed")], ["altitude", css("--alt")], ["fréq. cardiaque", css("--hr")]]) {
+    ctx.fillStyle = col; ctx.fillRect(lx, ly - 7, 10, 3); ctx.fillText(txt, lx + 14, ly - 2); lx += ctx.measureText(txt).width + 28;
+  }
+}
+function cutNear(px) {
+  const l = lab(); let best = -1, bd = 7;
+  l.cuts.forEach((c, k) => { const d = Math.abs(x(c) - px); if (d < bd) { bd = d; best = k; } });
+  return best;
+}
+const pxOf = e => e.clientX - cv.getBoundingClientRect().left;
+cv.addEventListener("mousemove", e => {
+  const px = pxOf(e);
+  if (drag) {
+    const l = lab(), b = bounds(), k = drag.k;
+    const lo = b[k] + 2, hi = b[k + 2] - 2;
+    l.cuts[k] = Math.round(Math.max(lo, Math.min(hi, tOf(px)))); drag.moved = true;
+  }
+  hoverT = Math.max(T().t[0], Math.min(T().t[T().t.length - 1], tOf(px)));
+  cv.style.cursor = cutNear(px) >= 0 || drag ? "ew-resize" : "crosshair";
+  showHover(hoverT); drawChart();
+});
+cv.addEventListener("mouseleave", () => { hoverT = null; drawChart(); });
+cv.addEventListener("mousedown", e => {
+  if (e.button !== 0) return;
+  const k = cutNear(pxOf(e));
+  if (k >= 0) { drag = { k, moved: false }; selCut = k; }
+});
+window.addEventListener("mouseup", () => {
+  if (drag) { const moved = drag.moved; drag = null; if (moved) { save(); renderAll(); } }
+});
+cv.addEventListener("click", e => {
+  const px = pxOf(e);
+  if (cutNear(px) >= 0) { drawChart(); return; }
+  selCut = -1; selSeg = segOf(tOf(px)); renderAll();
+});
+cv.addEventListener("dblclick", e => { const px = pxOf(e); if (cutNear(px) < 0) addCut(Math.round(tOf(px))); });
+cv.addEventListener("contextmenu", e => {
+  const k = cutNear(pxOf(e));
+  if (k >= 0) { e.preventDefault(); removeCut(k); }
+});
+
+// ---------- keyboard ----------
+window.addEventListener("keydown", e => {
+  if (e.target.tagName === "TEXTAREA") return;
+  if (/^[0-9]$/.test(e.key)) { const i = (Number(e.key) + 9) % 10; if (MODE_KEYS[i]) setMode(MODE_KEYS[i]); }
+  else if (e.key === "ArrowRight") { selSeg = Math.min(selSeg + 1, lab().modes.length - 1); renderAll(); }
+  else if (e.key === "ArrowLeft") { selSeg = Math.max(selSeg - 1, 0); renderAll(); }
+  else if (e.key === "ArrowDown") { cur = Math.min(cur + 1, traces.length - 1); selSeg = 0; renderAll(true); e.preventDefault(); }
+  else if (e.key === "ArrowUp") { cur = Math.max(cur - 1, 0); selSeg = 0; renderAll(true); e.preventDefault(); }
+  else if ((e.key === "Delete" || e.key === "Backspace") && selCut >= 0) removeCut(selCut);
+});
+document.getElementById("note").addEventListener("input", e => { lab().note = e.target.value; save(); renderTraces(); });
+
+// ---------- import / export ----------
+function toJSON() {
+  const out = { version: 1, traces: {} };
+  for (const tr of traces) {
+    const l = labels[tr.id], b = [tr.t[0], ...l.cuts, tr.t[tr.t.length - 1]];
+    const segments = [];
+    l.modes.forEach((m, i) => { if (m) segments.push({
+      start: new Date(b[i] * 1000).toISOString(), end: new Date(b[i + 1] * 1000).toISOString(), mode: m }); });
+    if (segments.length || l.note) out.traces[tr.id] = { segments, note: l.note || "", updated: l.updated };
+  }
+  return out;
+}
+document.getElementById("export").onclick = () => {
+  const blob = new Blob([JSON.stringify(toJSON(), null, 1)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "labels.json"; a.click();
+  toast("labels.json téléchargé : place-le dans data\\labels\\");
+};
+document.getElementById("importBtn").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text()); let n = 0;
+    for (const [id, entry] of Object.entries(data.traces || {})) {
+      if (!byId[id]) continue;
+      const st = fromSegments(byId[id], entry); if (st) { labels[id] = st; n++; }
+    }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(labels)); } catch (err) {}
+    renderAll(true); toast(`${n} trace(s) importée(s)`);
+  } catch (err) { toast("Fichier illisible"); }
+};
+function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("on"); setTimeout(() => t.classList.remove("on"), 2600); }
+
+function renderAll(fit) { renderTraces(); renderSegs(); renderMap(fit); drawChart(); }
+loadState(); renderModes(); renderAll(true);
+window.addEventListener("resize", resize); resize();
+</script>
+</body>
+</html>
