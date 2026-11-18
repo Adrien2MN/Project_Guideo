@@ -99,6 +99,21 @@ python scripts\eval_interpreteur.py -v
 
 Les séances de cinéma viennent d'une bibliothèque non officielle qui lit le site d'Allociné : usage personnel uniquement.
 
+## Agenda et trajets autour des événements
+
+Quand un événement est validé dans `test_interpreteur.py --discuter`, il entre dans l'agenda (`data\agenda\agenda.json`) avec un trajet aller et un trajet retour, et `data\agenda\guideo.ics` est réécrit (à importer ou à abonner dans ton agenda : les trajets y bloquent le temps de déplacement).
+
+- **Niveau 1** : sans autre événement autour, départ de chez toi et retour chez toi.
+- **Niveau 2** : si un événement finit peu avant (moins de 6 h), on part de là-bas. Si l'écart laisse au moins 30 min à la maison, Guideo te fait repasser chez toi, sinon il calcule le trajet direct. Si même le trajet direct arrive après le début, l'événement porte une alerte. Toute la journée est recalculée à chaque ajout : le trajet retour de l'événement précédent change en conséquence.
+- **Calcul des trajets** (`src\guideo\trajets`) : PRIM pour les transports en commun (clé `PRIM_API_KEY`), les graphes des rues pour le vélo et la marche s'ils sont construits, sinon une estimation à vol d'oiseau, signalée comme telle. Le plus rapide est retenu, les autres sont cités.
+- Les réglages (marge d'arrivée, temps minimal à la maison, fenêtre de 6 h) sont dans `connaissances_generales.toml`, section `[trajets]`.
+
+```bat
+python scripts\agenda.py                       :: les 7 prochains jours
+python scripts\agenda.py --supprimer ID        :: retire un événement et recalcule la journée
+python scripts\agenda.py --replanifier 2026-11-20
+```
+
 ## Le modèle de données
 
 | Table | Contenu |
@@ -120,6 +135,8 @@ src/guideo/
   prim/client.py      client de l'API Navitia de PRIM
   memoire/            mémoire personnelle + connaissances générales
   interpreteur/       phrase -> événement (LLM, lecture du texte, cinéma, géocodage)
+  trajets/            trajet entre deux points (PRIM, rues, estimation)
+  agenda/             agenda local, trajets aller/retour, planification de la journée, export .ics
 scripts/              vérifications et statistiques rapides
 tests/
 ```

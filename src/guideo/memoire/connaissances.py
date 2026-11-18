@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
@@ -14,6 +14,7 @@ FICHIER = Path(__file__).with_name("connaissances_generales.toml")
 class Connaissances:
     plages: dict
     activites: dict
+    trajets: dict = field(default_factory=dict)
 
     def bornes(self, plage: str) -> tuple[str, str]:
         p = self.plages[plage]
@@ -52,4 +53,4 @@ class Connaissances:
 def charger_connaissances(chemin: Path = FICHIER) -> Connaissances:
     with open(chemin, "rb") as f:
         d = tomllib.load(f)
-    return Connaissances(plages=d["plages"], activites=d["activites"])
+    return Connaissances(plages=d["plages"], activites=d["activites"], trajets=d.get("trajets", {}))

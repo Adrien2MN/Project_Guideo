@@ -29,6 +29,8 @@ try:
 except ImportError:  # projet pas installé avec pip install -e : on ajoute src/ au chemin
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
+from guideo.agenda import Agenda, Evenement, Parametres, planifier_jour
+from guideo.agenda.planification import photographier, trajets_modifies
 from guideo.config import load_settings
 from guideo.interpreteur import Analyse, Manque, analyser, appliquer_horaire, completer, expliquer
 from guideo.interpreteur import cinema as cine
@@ -37,9 +39,12 @@ from guideo.interpreteur.comprendre import MODELE, comprendre
 from guideo.interpreteur.texte import date_dite
 from guideo.memoire import Memoire, charger_connaissances, normaliser
 from guideo.memoire.memoire import JOURS
+from guideo.trajets import Point, calculateur_par_defaut
 
 DATA = load_settings().data_dir
 JOURNAL_GEO = DATA / "geocodage_journal.jsonl"
+AGENDA = DATA / "agenda" / "agenda.json"
+ICS = DATA / "agenda" / "guideo.ics"
 NOMS_ACTIVITES = {"soiree": "Soirée", "rendez-vous": "Rendez-vous", "cinema": "Cinéma"}
 
 
@@ -249,6 +254,8 @@ def enregistrer(a: Analyse, memoire: Memoire, connaissances) -> None:
         proposer_alias(a.chez, a.lieu_id, memoire)
     else:
         proposer_alias(a.zone, a.lieu_id, memoire)
+    ajouter_a_l_agenda(a.titre or a.activite.capitalize(), a.activite, debut, fin,
+                       point_memoire(memoire, a.lieu_id), memoire, connaissances)
 
 
 def valider(a: Analyse, memoire: Memoire, connaissances, maintenant: datetime) -> None:
@@ -299,6 +306,57 @@ def cinema(a: Analyse, source, memoire: Memoire, connaissances, maintenant: date
     memoire.marquer_utilise(lieu["id"])
     print(f"   [mémoire : séance à {lieu['nom']} enregistrée"
           + (f" ; zone « {choisi.zone} » retenue" if nouvelle_zone else "") + "]")
+    ajouter_a_l_agenda(f"{s.film} ({s.version})", "cinema", s.debut, choisi.fin,
+                       point_memoire(memoire, lieu["id"]), memoire, connaissances)
+
+
+# ============================================================================ agenda et trajets
+_calculateur = None
+
+
+def calculateur():
+    """Créé une seule fois : charger les graphes des rues prend quelques secondes."""
+    global _calculateur
+    if _calculateur is None:
+        print("   [préparation du calcul d'itinéraires...]")
+        _calculateur = calculateur_par_defaut(load_settings())
+    return _calculateur
+
+
+def point_memoire(memoire: Memoire, lieu_id: Optional[str]) -> Optional[Point]:
+    e = memoire.entite(lieu_id) if lieu_id else None
+    if e is None or e.get("lat") is None:
+        return None
+    return Point(lieu_id, nom_lieu(memoire, lieu_id) if lieu_id != "domicile" else "chez toi", e["lat"], e["lon"])
+
+
+def point_domicile(memoire: Memoire) -> Optional[Point]:
+    d = memoire.domicile
+    return Point("domicile", "chez toi", d["lat"], d["lon"]) if d else None
+
+
+def ajouter_a_l_agenda(titre: str, activite: str, debut: datetime, fin: Optional[datetime],
+                       lieu: Optional[Point], memoire: Memoire, connaissances) -> None:
+    """Ajoute l'événement, recalcule les trajets de la journée et affiche ce qui en découle."""
+    agenda = Agenda(AGENDA)
+    jour = debut.date()
+    avant = photographier(agenda, jour)
+    evt = agenda.ajouter(Evenement(titre, activite, debut, fin, lieu))
+    for message in planifier_jour(agenda, jour, calculateur(), point_domicile(memoire),
+                                  Parametres.depuis(connaissances.trajets)):
+        print(f"   {message}")
+    agenda.sauver()
+    agenda.exporter_ics(ICS)
+
+    for sens, t in (("Aller ", evt.aller), ("Retour", evt.retour)):
+        if t:
+            print(f"   {sens} : {t.ligne()}" + (f"\n            ({t.note})" if t.note else ""))
+    if evt.alerte:
+        print(f"   /!\\ {evt.alerte}")
+    for e, sens, t in trajets_modifies(avant, agenda, jour):
+        if e.id != evt.id:
+            print(f"   Changé : {sens} de « {e.titre} » → {t.ligne()}")
+    print(f"   [agenda : ajouté ; {ICS} mis à jour]")
 
 
 # ============================================================================ programme
