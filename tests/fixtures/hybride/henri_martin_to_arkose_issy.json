@@ -1,0 +1,1924 @@
+{
+ "journeys": [
+  {
+   "type": "best",
+   "departure_date_time": "20261026T191656",
+   "arrival_date_time": "20261026T194738",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 174,
+     "departure_date_time": "20261026T191656",
+     "arrival_date_time": "20261026T191950"
+    },
+    {
+     "type": "public_transport",
+     "duration": 360,
+     "departure_date_time": "20261026T191950",
+     "arrival_date_time": "20261026T192550",
+     "display_informations": {
+      "commercial_mode": "RER",
+      "code": "C",
+      "direction": "Massy - Palaiseau (Massy)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191950",
+       "arrival_date_time": "20261026T191910",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:45447",
+        "name": "Avenue Henri Martin",
+        "coord": {
+         "lat": "48.865455",
+         "lon": "2.272235"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192210",
+       "arrival_date_time": "20261026T192130",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:45453",
+        "name": "Boulainvilliers",
+        "coord": {
+         "lat": "48.856981",
+         "lon": "2.274807"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192410",
+       "arrival_date_time": "20261026T192310",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:45419",
+        "name": "Avenue du Président Kennedy Maison de Radio France",
+        "coord": {
+         "lat": "48.853525",
+         "lon": "2.279679"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192650",
+       "arrival_date_time": "20261026T192550",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:58757",
+        "name": "Champ de Mars Tour Eiffel",
+        "coord": {
+         "lat": "48.856477",
+         "lon": "2.289656"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "waiting",
+     "duration": 280,
+     "departure_date_time": "20261026T192550",
+     "arrival_date_time": "20261026T193030"
+    },
+    {
+     "type": "public_transport",
+     "duration": 450,
+     "departure_date_time": "20261026T193030",
+     "arrival_date_time": "20261026T193800",
+     "display_informations": {
+      "commercial_mode": "RER",
+      "code": "C",
+      "direction": "Saint-Quentin en Yvelines - Montigny-le-Bretonneux (Montigny-le-Bretonneux)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T193030",
+       "arrival_date_time": "20261026T192950",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:58757",
+        "name": "Champ de Mars Tour Eiffel",
+        "coord": {
+         "lat": "48.856477",
+         "lon": "2.289656"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193340",
+       "arrival_date_time": "20261026T193240",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:45346",
+        "name": "Javel",
+        "coord": {
+         "lat": "48.847162",
+         "lon": "2.278037"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193610",
+       "arrival_date_time": "20261026T193530",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:58798",
+        "name": "Pont du Garigliano - Hôpital Européen G. Pompidou",
+        "coord": {
+         "lat": "48.838883",
+         "lon": "2.270470"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193900",
+       "arrival_date_time": "20261026T193800",
+       "stop_point": {
+        "id": "stop_point:IDFM:monomodalStopPlace:462357",
+        "name": "Issy - Val de Seine",
+        "coord": {
+         "lat": "48.830510",
+         "lon": "2.264011"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 578,
+     "departure_date_time": "20261026T193800",
+     "arrival_date_time": "20261026T194738"
+    }
+   ]
+  },
+  {
+   "type": "rapid",
+   "departure_date_time": "20261026T191311",
+   "arrival_date_time": "20261026T194750",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 229,
+     "departure_date_time": "20261026T191311",
+     "arrival_date_time": "20261026T191700"
+    },
+    {
+     "type": "public_transport",
+     "duration": 660,
+     "departure_date_time": "20261026T191700",
+     "arrival_date_time": "20261026T192800",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "PC",
+      "direction": "Pont du Garigliano - Hôpital Européen Georges Pompidou (Paris)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191700",
+       "arrival_date_time": "20261026T191700",
+       "stop_point": {
+        "id": "stop_point:IDFM:25343",
+        "name": "Porte de la Muette",
+        "coord": {
+         "lat": "48.863618",
+         "lon": "2.268785"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191800",
+       "arrival_date_time": "20261026T191800",
+       "stop_point": {
+        "id": "stop_point:IDFM:34189",
+        "name": "Ernest Hébert",
+        "coord": {
+         "lat": "48.860808",
+         "lon": "2.266725"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191900",
+       "arrival_date_time": "20261026T191900",
+       "stop_point": {
+        "id": "stop_point:IDFM:20003",
+        "name": "Porte de Passy",
+        "coord": {
+         "lat": "48.857070",
+         "lon": "2.264297"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192100",
+       "arrival_date_time": "20261026T192100",
+       "stop_point": {
+        "id": "stop_point:IDFM:29454",
+        "name": "Raffet",
+        "coord": {
+         "lat": "48.853323",
+         "lon": "2.261897"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192200",
+       "arrival_date_time": "20261026T192200",
+       "stop_point": {
+        "id": "stop_point:IDFM:28005",
+        "name": "Alfred Capus",
+        "coord": {
+         "lat": "48.850271",
+         "lon": "2.259964"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192300",
+       "arrival_date_time": "20261026T192300",
+       "stop_point": {
+        "id": "stop_point:IDFM:39332",
+        "name": "Porte d'Auteuil",
+        "coord": {
+         "lat": "48.846869",
+         "lon": "2.258064"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192400",
+       "arrival_date_time": "20261026T192400",
+       "stop_point": {
+        "id": "stop_point:IDFM:18721",
+        "name": "Porte Molitor",
+        "coord": {
+         "lat": "48.845002",
+         "lon": "2.257232"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192600",
+       "arrival_date_time": "20261026T192600",
+       "stop_point": {
+        "id": "stop_point:IDFM:23514",
+        "name": "Lycée Claude Bernard",
+        "coord": {
+         "lat": "48.842115",
+         "lon": "2.255897"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192700",
+       "arrival_date_time": "20261026T192700",
+       "stop_point": {
+        "id": "stop_point:IDFM:37398",
+        "name": "Porte de Saint-Cloud - Michel-Ange",
+        "coord": {
+         "lat": "48.839206",
+         "lon": "2.256592"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192800",
+       "arrival_date_time": "20261026T192800",
+       "stop_point": {
+        "id": "stop_point:IDFM:37397",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.838007",
+         "lon": "2.256133"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "transfer",
+     "mode": "walking",
+     "duration": 79,
+     "departure_date_time": "20261026T192800",
+     "arrival_date_time": "20261026T192919"
+    },
+    {
+     "type": "waiting",
+     "duration": 281,
+     "departure_date_time": "20261026T192919",
+     "arrival_date_time": "20261026T193400"
+    },
+    {
+     "type": "public_transport",
+     "duration": 420,
+     "departure_date_time": "20261026T193400",
+     "arrival_date_time": "20261026T194100",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "189",
+      "direction": "Georges Pompidou (Clamart)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T193400",
+       "arrival_date_time": "20261026T193400",
+       "stop_point": {
+        "id": "stop_point:IDFM:23785",
+        "name": "Porte de Saint-Cloud - Métro",
+        "coord": {
+         "lat": "48.837352",
+         "lon": "2.256401"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193600",
+       "arrival_date_time": "20261026T193600",
+       "stop_point": {
+        "id": "stop_point:IDFM:37207",
+        "name": "Pierre de Coubertin",
+        "coord": {
+         "lat": "48.834714",
+         "lon": "2.256030"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193600",
+       "arrival_date_time": "20261026T193600",
+       "stop_point": {
+        "id": "stop_point:IDFM:28639",
+        "name": "Abel Gance",
+        "coord": {
+         "lat": "48.834289",
+         "lon": "2.258502"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193900",
+       "arrival_date_time": "20261026T193900",
+       "stop_point": {
+        "id": "stop_point:IDFM:7839",
+        "name": "Quai du Point du Jour",
+        "coord": {
+         "lat": "48.830911",
+         "lon": "2.257623"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194100",
+       "arrival_date_time": "20261026T194100",
+       "stop_point": {
+        "id": "stop_point:IDFM:20421",
+        "name": "Issy - Val de Seine",
+        "coord": {
+         "lat": "48.829066",
+         "lon": "2.263248"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 410,
+     "departure_date_time": "20261026T194100",
+     "arrival_date_time": "20261026T194750"
+    }
+   ]
+  },
+  {
+   "type": "rapid",
+   "departure_date_time": "20261026T191023",
+   "arrival_date_time": "20261026T194750",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 408,
+     "departure_date_time": "20261026T191023",
+     "arrival_date_time": "20261026T191711"
+    },
+    {
+     "type": "public_transport",
+     "duration": 548,
+     "departure_date_time": "20261026T191711",
+     "arrival_date_time": "20261026T192619",
+     "display_informations": {
+      "commercial_mode": "Métro",
+      "code": "9",
+      "direction": "Pont de Sèvres (Boulogne-Billancourt)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191711",
+       "arrival_date_time": "20261026T191655",
+       "stop_point": {
+        "id": "stop_point:IDFM:463055",
+        "name": "Rue de la Pompe",
+        "coord": {
+         "lat": "48.864037",
+         "lon": "2.277916"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191909",
+       "arrival_date_time": "20261026T191851",
+       "stop_point": {
+        "id": "stop_point:IDFM:21929",
+        "name": "La Muette",
+        "coord": {
+         "lat": "48.858092",
+         "lon": "2.274096"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192023",
+       "arrival_date_time": "20261026T192005",
+       "stop_point": {
+        "id": "stop_point:IDFM:463290",
+        "name": "Ranelagh",
+        "coord": {
+         "lat": "48.855504",
+         "lon": "2.269948"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192135",
+       "arrival_date_time": "20261026T192117",
+       "stop_point": {
+        "id": "stop_point:IDFM:463038",
+        "name": "Jasmin",
+        "coord": {
+         "lat": "48.852433",
+         "lon": "2.267933"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192311",
+       "arrival_date_time": "20261026T192253",
+       "stop_point": {
+        "id": "stop_point:IDFM:463238",
+        "name": "Michel-Ange - Auteuil",
+        "coord": {
+         "lat": "48.847709",
+         "lon": "2.263809"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192418",
+       "arrival_date_time": "20261026T192401",
+       "stop_point": {
+        "id": "stop_point:IDFM:21923",
+        "name": "Michel-Ange - Molitor",
+        "coord": {
+         "lat": "48.844740",
+         "lon": "2.261460"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192515",
+       "arrival_date_time": "20261026T192501",
+       "stop_point": {
+        "id": "stop_point:IDFM:462956",
+        "name": "Exelmans",
+        "coord": {
+         "lat": "48.842453",
+         "lon": "2.259612"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192637",
+       "arrival_date_time": "20261026T192619",
+       "stop_point": {
+        "id": "stop_point:IDFM:463259",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.837904",
+         "lon": "2.257047"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "transfer",
+     "mode": "walking",
+     "duration": 215,
+     "departure_date_time": "20261026T192619",
+     "arrival_date_time": "20261026T192954"
+    },
+    {
+     "type": "waiting",
+     "duration": 246,
+     "departure_date_time": "20261026T192954",
+     "arrival_date_time": "20261026T193400"
+    },
+    {
+     "type": "public_transport",
+     "duration": 420,
+     "departure_date_time": "20261026T193400",
+     "arrival_date_time": "20261026T194100",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "189",
+      "direction": "Georges Pompidou (Clamart)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T193400",
+       "arrival_date_time": "20261026T193400",
+       "stop_point": {
+        "id": "stop_point:IDFM:23785",
+        "name": "Porte de Saint-Cloud - Métro",
+        "coord": {
+         "lat": "48.837352",
+         "lon": "2.256401"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193600",
+       "arrival_date_time": "20261026T193600",
+       "stop_point": {
+        "id": "stop_point:IDFM:37207",
+        "name": "Pierre de Coubertin",
+        "coord": {
+         "lat": "48.834714",
+         "lon": "2.256030"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193600",
+       "arrival_date_time": "20261026T193600",
+       "stop_point": {
+        "id": "stop_point:IDFM:28639",
+        "name": "Abel Gance",
+        "coord": {
+         "lat": "48.834289",
+         "lon": "2.258502"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193900",
+       "arrival_date_time": "20261026T193900",
+       "stop_point": {
+        "id": "stop_point:IDFM:7839",
+        "name": "Quai du Point du Jour",
+        "coord": {
+         "lat": "48.830911",
+         "lon": "2.257623"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194100",
+       "arrival_date_time": "20261026T194100",
+       "stop_point": {
+        "id": "stop_point:IDFM:20421",
+        "name": "Issy - Val de Seine",
+        "coord": {
+         "lat": "48.829066",
+         "lon": "2.263248"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 410,
+     "departure_date_time": "20261026T194100",
+     "arrival_date_time": "20261026T194750"
+    }
+   ]
+  },
+  {
+   "type": "comfort",
+   "departure_date_time": "20261026T191023",
+   "arrival_date_time": "20261026T195445",
+   "nb_transfers": 0,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 408,
+     "departure_date_time": "20261026T191023",
+     "arrival_date_time": "20261026T191711"
+    },
+    {
+     "type": "public_transport",
+     "duration": 548,
+     "departure_date_time": "20261026T191711",
+     "arrival_date_time": "20261026T192619",
+     "display_informations": {
+      "commercial_mode": "Métro",
+      "code": "9",
+      "direction": "Pont de Sèvres (Boulogne-Billancourt)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191711",
+       "arrival_date_time": "20261026T191655",
+       "stop_point": {
+        "id": "stop_point:IDFM:463055",
+        "name": "Rue de la Pompe",
+        "coord": {
+         "lat": "48.864037",
+         "lon": "2.277916"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191909",
+       "arrival_date_time": "20261026T191851",
+       "stop_point": {
+        "id": "stop_point:IDFM:21929",
+        "name": "La Muette",
+        "coord": {
+         "lat": "48.858092",
+         "lon": "2.274096"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192023",
+       "arrival_date_time": "20261026T192005",
+       "stop_point": {
+        "id": "stop_point:IDFM:463290",
+        "name": "Ranelagh",
+        "coord": {
+         "lat": "48.855504",
+         "lon": "2.269948"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192135",
+       "arrival_date_time": "20261026T192117",
+       "stop_point": {
+        "id": "stop_point:IDFM:463038",
+        "name": "Jasmin",
+        "coord": {
+         "lat": "48.852433",
+         "lon": "2.267933"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192311",
+       "arrival_date_time": "20261026T192253",
+       "stop_point": {
+        "id": "stop_point:IDFM:463238",
+        "name": "Michel-Ange - Auteuil",
+        "coord": {
+         "lat": "48.847709",
+         "lon": "2.263809"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192418",
+       "arrival_date_time": "20261026T192401",
+       "stop_point": {
+        "id": "stop_point:IDFM:21923",
+        "name": "Michel-Ange - Molitor",
+        "coord": {
+         "lat": "48.844740",
+         "lon": "2.261460"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192515",
+       "arrival_date_time": "20261026T192501",
+       "stop_point": {
+        "id": "stop_point:IDFM:462956",
+        "name": "Exelmans",
+        "coord": {
+         "lat": "48.842453",
+         "lon": "2.259612"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192637",
+       "arrival_date_time": "20261026T192619",
+       "stop_point": {
+        "id": "stop_point:IDFM:463259",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.837904",
+         "lon": "2.257047"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 1706,
+     "departure_date_time": "20261026T192619",
+     "arrival_date_time": "20261026T195445"
+    }
+   ]
+  },
+  {
+   "type": "rapid",
+   "departure_date_time": "20261026T191023",
+   "arrival_date_time": "20261026T195600",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 408,
+     "departure_date_time": "20261026T191023",
+     "arrival_date_time": "20261026T191711"
+    },
+    {
+     "type": "public_transport",
+     "duration": 839,
+     "departure_date_time": "20261026T191711",
+     "arrival_date_time": "20261026T193110",
+     "display_informations": {
+      "commercial_mode": "Métro",
+      "code": "9",
+      "direction": "Pont de Sèvres (Boulogne-Billancourt)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191711",
+       "arrival_date_time": "20261026T191655",
+       "stop_point": {
+        "id": "stop_point:IDFM:463055",
+        "name": "Rue de la Pompe",
+        "coord": {
+         "lat": "48.864037",
+         "lon": "2.277916"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191909",
+       "arrival_date_time": "20261026T191851",
+       "stop_point": {
+        "id": "stop_point:IDFM:21929",
+        "name": "La Muette",
+        "coord": {
+         "lat": "48.858092",
+         "lon": "2.274096"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192023",
+       "arrival_date_time": "20261026T192005",
+       "stop_point": {
+        "id": "stop_point:IDFM:463290",
+        "name": "Ranelagh",
+        "coord": {
+         "lat": "48.855504",
+         "lon": "2.269948"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192135",
+       "arrival_date_time": "20261026T192117",
+       "stop_point": {
+        "id": "stop_point:IDFM:463038",
+        "name": "Jasmin",
+        "coord": {
+         "lat": "48.852433",
+         "lon": "2.267933"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192311",
+       "arrival_date_time": "20261026T192253",
+       "stop_point": {
+        "id": "stop_point:IDFM:463238",
+        "name": "Michel-Ange - Auteuil",
+        "coord": {
+         "lat": "48.847709",
+         "lon": "2.263809"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192418",
+       "arrival_date_time": "20261026T192401",
+       "stop_point": {
+        "id": "stop_point:IDFM:21923",
+        "name": "Michel-Ange - Molitor",
+        "coord": {
+         "lat": "48.844740",
+         "lon": "2.261460"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192515",
+       "arrival_date_time": "20261026T192501",
+       "stop_point": {
+        "id": "stop_point:IDFM:462956",
+        "name": "Exelmans",
+        "coord": {
+         "lat": "48.842453",
+         "lon": "2.259612"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192637",
+       "arrival_date_time": "20261026T192619",
+       "stop_point": {
+        "id": "stop_point:IDFM:463259",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.837904",
+         "lon": "2.257047"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192839",
+       "arrival_date_time": "20261026T192823",
+       "stop_point": {
+        "id": "stop_point:IDFM:21940",
+        "name": "Marcel Sembat",
+        "coord": {
+         "lat": "48.833808",
+         "lon": "2.243468"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193001",
+       "arrival_date_time": "20261026T192947",
+       "stop_point": {
+        "id": "stop_point:IDFM:463035",
+        "name": "Billancourt",
+        "coord": {
+         "lat": "48.831920",
+         "lon": "2.237891"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193110",
+       "arrival_date_time": "20261026T193110",
+       "stop_point": {
+        "id": "stop_point:IDFM:463233",
+        "name": "Pont de Sèvres",
+        "coord": {
+         "lat": "48.829669",
+         "lon": "2.230505"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "transfer",
+     "mode": "walking",
+     "duration": 480,
+     "departure_date_time": "20261026T193110",
+     "arrival_date_time": "20261026T193910"
+    },
+    {
+     "type": "waiting",
+     "duration": 184,
+     "departure_date_time": "20261026T193910",
+     "arrival_date_time": "20261026T194214"
+    },
+    {
+     "type": "public_transport",
+     "duration": 411,
+     "departure_date_time": "20261026T194214",
+     "arrival_date_time": "20261026T194905",
+     "display_informations": {
+      "commercial_mode": "Tramway",
+      "code": "T2",
+      "direction": "Porte de Versailles (Paris)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T194214",
+       "arrival_date_time": "20261026T194214",
+       "stop_point": {
+        "id": "stop_point:IDFM:22302",
+        "name": "Musée de Sèvres",
+        "coord": {
+         "lat": "48.828826",
+         "lon": "2.225273"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194353",
+       "arrival_date_time": "20261026T194353",
+       "stop_point": {
+        "id": "stop_point:IDFM:27464",
+        "name": "Brimborion",
+        "coord": {
+         "lat": "48.822111",
+         "lon": "2.231325"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194504",
+       "arrival_date_time": "20261026T194504",
+       "stop_point": {
+        "id": "stop_point:IDFM:25640",
+        "name": "Meudon-sur-Seine",
+        "coord": {
+         "lat": "48.819135",
+         "lon": "2.238587"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194700",
+       "arrival_date_time": "20261026T194700",
+       "stop_point": {
+        "id": "stop_point:IDFM:22297",
+        "name": "Les Moulineaux",
+        "coord": {
+         "lat": "48.821464",
+         "lon": "2.251384"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194905",
+       "arrival_date_time": "20261026T194905",
+       "stop_point": {
+        "id": "stop_point:IDFM:23439",
+        "name": "Jacques-Henri Lartigue",
+        "coord": {
+         "lat": "48.824705",
+         "lon": "2.260545"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 415,
+     "departure_date_time": "20261026T194905",
+     "arrival_date_time": "20261026T195600"
+    }
+   ]
+  },
+  {
+   "type": "comfort",
+   "departure_date_time": "20261026T191311",
+   "arrival_date_time": "20261026T195617",
+   "nb_transfers": 0,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 229,
+     "departure_date_time": "20261026T191311",
+     "arrival_date_time": "20261026T191700"
+    },
+    {
+     "type": "public_transport",
+     "duration": 660,
+     "departure_date_time": "20261026T191700",
+     "arrival_date_time": "20261026T192800",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "PC",
+      "direction": "Pont du Garigliano - Hôpital Européen Georges Pompidou (Paris)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191700",
+       "arrival_date_time": "20261026T191700",
+       "stop_point": {
+        "id": "stop_point:IDFM:25343",
+        "name": "Porte de la Muette",
+        "coord": {
+         "lat": "48.863618",
+         "lon": "2.268785"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191800",
+       "arrival_date_time": "20261026T191800",
+       "stop_point": {
+        "id": "stop_point:IDFM:34189",
+        "name": "Ernest Hébert",
+        "coord": {
+         "lat": "48.860808",
+         "lon": "2.266725"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191900",
+       "arrival_date_time": "20261026T191900",
+       "stop_point": {
+        "id": "stop_point:IDFM:20003",
+        "name": "Porte de Passy",
+        "coord": {
+         "lat": "48.857070",
+         "lon": "2.264297"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192100",
+       "arrival_date_time": "20261026T192100",
+       "stop_point": {
+        "id": "stop_point:IDFM:29454",
+        "name": "Raffet",
+        "coord": {
+         "lat": "48.853323",
+         "lon": "2.261897"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192200",
+       "arrival_date_time": "20261026T192200",
+       "stop_point": {
+        "id": "stop_point:IDFM:28005",
+        "name": "Alfred Capus",
+        "coord": {
+         "lat": "48.850271",
+         "lon": "2.259964"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192300",
+       "arrival_date_time": "20261026T192300",
+       "stop_point": {
+        "id": "stop_point:IDFM:39332",
+        "name": "Porte d'Auteuil",
+        "coord": {
+         "lat": "48.846869",
+         "lon": "2.258064"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192400",
+       "arrival_date_time": "20261026T192400",
+       "stop_point": {
+        "id": "stop_point:IDFM:18721",
+        "name": "Porte Molitor",
+        "coord": {
+         "lat": "48.845002",
+         "lon": "2.257232"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192600",
+       "arrival_date_time": "20261026T192600",
+       "stop_point": {
+        "id": "stop_point:IDFM:23514",
+        "name": "Lycée Claude Bernard",
+        "coord": {
+         "lat": "48.842115",
+         "lon": "2.255897"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192700",
+       "arrival_date_time": "20261026T192700",
+       "stop_point": {
+        "id": "stop_point:IDFM:37398",
+        "name": "Porte de Saint-Cloud - Michel-Ange",
+        "coord": {
+         "lat": "48.839206",
+         "lon": "2.256592"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192800",
+       "arrival_date_time": "20261026T192800",
+       "stop_point": {
+        "id": "stop_point:IDFM:37397",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.838007",
+         "lon": "2.256133"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 1697,
+     "departure_date_time": "20261026T192800",
+     "arrival_date_time": "20261026T195617"
+    }
+   ]
+  },
+  {
+   "type": "rapid",
+   "departure_date_time": "20261026T191228",
+   "arrival_date_time": "20261026T200008",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 408,
+     "departure_date_time": "20261026T191228",
+     "arrival_date_time": "20261026T191916"
+    },
+    {
+     "type": "public_transport",
+     "duration": 672,
+     "departure_date_time": "20261026T191916",
+     "arrival_date_time": "20261026T193028",
+     "display_informations": {
+      "commercial_mode": "Métro",
+      "code": "9",
+      "direction": "Pont de Sèvres (Boulogne-Billancourt)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191916",
+       "arrival_date_time": "20261026T191900",
+       "stop_point": {
+        "id": "stop_point:IDFM:463055",
+        "name": "Rue de la Pompe",
+        "coord": {
+         "lat": "48.864037",
+         "lon": "2.277916"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192114",
+       "arrival_date_time": "20261026T192056",
+       "stop_point": {
+        "id": "stop_point:IDFM:21929",
+        "name": "La Muette",
+        "coord": {
+         "lat": "48.858092",
+         "lon": "2.274096"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192228",
+       "arrival_date_time": "20261026T192210",
+       "stop_point": {
+        "id": "stop_point:IDFM:463290",
+        "name": "Ranelagh",
+        "coord": {
+         "lat": "48.855504",
+         "lon": "2.269948"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192340",
+       "arrival_date_time": "20261026T192322",
+       "stop_point": {
+        "id": "stop_point:IDFM:463038",
+        "name": "Jasmin",
+        "coord": {
+         "lat": "48.852433",
+         "lon": "2.267933"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192516",
+       "arrival_date_time": "20261026T192458",
+       "stop_point": {
+        "id": "stop_point:IDFM:463238",
+        "name": "Michel-Ange - Auteuil",
+        "coord": {
+         "lat": "48.847709",
+         "lon": "2.263809"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192623",
+       "arrival_date_time": "20261026T192606",
+       "stop_point": {
+        "id": "stop_point:IDFM:21923",
+        "name": "Michel-Ange - Molitor",
+        "coord": {
+         "lat": "48.844740",
+         "lon": "2.261460"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192720",
+       "arrival_date_time": "20261026T192706",
+       "stop_point": {
+        "id": "stop_point:IDFM:462956",
+        "name": "Exelmans",
+        "coord": {
+         "lat": "48.842453",
+         "lon": "2.259612"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192842",
+       "arrival_date_time": "20261026T192824",
+       "stop_point": {
+        "id": "stop_point:IDFM:463259",
+        "name": "Porte de Saint-Cloud",
+        "coord": {
+         "lat": "48.837904",
+         "lon": "2.257047"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193044",
+       "arrival_date_time": "20261026T193028",
+       "stop_point": {
+        "id": "stop_point:IDFM:21940",
+        "name": "Marcel Sembat",
+        "coord": {
+         "lat": "48.833808",
+         "lon": "2.243468"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "transfer",
+     "mode": "walking",
+     "duration": 246,
+     "departure_date_time": "20261026T193028",
+     "arrival_date_time": "20261026T193434"
+    },
+    {
+     "type": "waiting",
+     "duration": 206,
+     "departure_date_time": "20261026T193434",
+     "arrival_date_time": "20261026T193800"
+    },
+    {
+     "type": "public_transport",
+     "duration": 1020,
+     "departure_date_time": "20261026T193800",
+     "arrival_date_time": "20261026T195500",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "123",
+      "direction": "Mairie d'Issy (Issy-les-Moulineaux)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T193800",
+       "arrival_date_time": "20261026T193800",
+       "stop_point": {
+        "id": "stop_point:IDFM:28129",
+        "name": "Marcel Sembat",
+        "coord": {
+         "lat": "48.833072",
+         "lon": "2.243738"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193900",
+       "arrival_date_time": "20261026T193900",
+       "stop_point": {
+        "id": "stop_point:IDFM:28121",
+        "name": "Dôme",
+        "coord": {
+         "lat": "48.830509",
+         "lon": "2.245192"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194000",
+       "arrival_date_time": "20261026T194000",
+       "stop_point": {
+        "id": "stop_point:IDFM:28127",
+        "name": "Rue du Point du Jour",
+        "coord": {
+         "lat": "48.828583",
+         "lon": "2.246296"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194200",
+       "arrival_date_time": "20261026T194200",
+       "stop_point": {
+        "id": "stop_point:IDFM:28122",
+        "name": "Pont de Billancourt",
+        "coord": {
+         "lat": "48.825759",
+         "lon": "2.247876"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194400",
+       "arrival_date_time": "20261026T194400",
+       "stop_point": {
+        "id": "stop_point:IDFM:25888",
+        "name": "Ile Saint Germain",
+        "coord": {
+         "lat": "48.822757",
+         "lon": "2.249499"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194600",
+       "arrival_date_time": "20261026T194600",
+       "stop_point": {
+        "id": "stop_point:IDFM:11234",
+        "name": "Les Moulineaux",
+        "coord": {
+         "lat": "48.821499",
+         "lon": "2.249776"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194800",
+       "arrival_date_time": "20261026T194800",
+       "stop_point": {
+        "id": "stop_point:IDFM:7835",
+        "name": "Paul Besnard",
+        "coord": {
+         "lat": "48.818421",
+         "lon": "2.249412"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194900",
+       "arrival_date_time": "20261026T194900",
+       "stop_point": {
+        "id": "stop_point:IDFM:37837",
+        "name": "Verdun - Jean-Pierre Timbaud",
+        "coord": {
+         "lat": "48.817814",
+         "lon": "2.250197"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195000",
+       "arrival_date_time": "20261026T195000",
+       "stop_point": {
+        "id": "stop_point:IDFM:28131",
+        "name": "Chemin des Vignes",
+        "coord": {
+         "lat": "48.819056",
+         "lon": "2.254619"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195100",
+       "arrival_date_time": "20261026T195100",
+       "stop_point": {
+        "id": "stop_point:IDFM:28137",
+        "name": "Paul Bert",
+        "coord": {
+         "lat": "48.819607",
+         "lon": "2.256450"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195200",
+       "arrival_date_time": "20261026T195200",
+       "stop_point": {
+        "id": "stop_point:IDFM:22550",
+        "name": "Issy RER",
+        "coord": {
+         "lat": "48.820324",
+         "lon": "2.258864"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195400",
+       "arrival_date_time": "20261026T195400",
+       "stop_point": {
+        "id": "stop_point:IDFM:39568",
+        "name": "Roger Salengro",
+        "coord": {
+         "lat": "48.823684",
+         "lon": "2.262712"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195500",
+       "arrival_date_time": "20261026T195500",
+       "stop_point": {
+        "id": "stop_point:IDFM:28132",
+        "name": "Ferber - Galliéni",
+        "coord": {
+         "lat": "48.824913",
+         "lon": "2.266603"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 308,
+     "departure_date_time": "20261026T195500",
+     "arrival_date_time": "20261026T200008"
+    }
+   ]
+  },
+  {
+   "type": "less_fallback_walk",
+   "departure_date_time": "20261026T191311",
+   "arrival_date_time": "20261026T200808",
+   "nb_transfers": 1,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 229,
+     "departure_date_time": "20261026T191311",
+     "arrival_date_time": "20261026T191700"
+    },
+    {
+     "type": "public_transport",
+     "duration": 360,
+     "departure_date_time": "20261026T191700",
+     "arrival_date_time": "20261026T192300",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "PC",
+      "direction": "Pont du Garigliano - Hôpital Européen Georges Pompidou (Paris)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T191700",
+       "arrival_date_time": "20261026T191700",
+       "stop_point": {
+        "id": "stop_point:IDFM:25343",
+        "name": "Porte de la Muette",
+        "coord": {
+         "lat": "48.863618",
+         "lon": "2.268785"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191800",
+       "arrival_date_time": "20261026T191800",
+       "stop_point": {
+        "id": "stop_point:IDFM:34189",
+        "name": "Ernest Hébert",
+        "coord": {
+         "lat": "48.860808",
+         "lon": "2.266725"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T191900",
+       "arrival_date_time": "20261026T191900",
+       "stop_point": {
+        "id": "stop_point:IDFM:20003",
+        "name": "Porte de Passy",
+        "coord": {
+         "lat": "48.857070",
+         "lon": "2.264297"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192100",
+       "arrival_date_time": "20261026T192100",
+       "stop_point": {
+        "id": "stop_point:IDFM:29454",
+        "name": "Raffet",
+        "coord": {
+         "lat": "48.853323",
+         "lon": "2.261897"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192200",
+       "arrival_date_time": "20261026T192200",
+       "stop_point": {
+        "id": "stop_point:IDFM:28005",
+        "name": "Alfred Capus",
+        "coord": {
+         "lat": "48.850271",
+         "lon": "2.259964"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192300",
+       "arrival_date_time": "20261026T192300",
+       "stop_point": {
+        "id": "stop_point:IDFM:39332",
+        "name": "Porte d'Auteuil",
+        "coord": {
+         "lat": "48.846869",
+         "lon": "2.258064"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "transfer",
+     "mode": "walking",
+     "duration": 60,
+     "departure_date_time": "20261026T192300",
+     "arrival_date_time": "20261026T192400"
+    },
+    {
+     "type": "waiting",
+     "duration": 180,
+     "departure_date_time": "20261026T192400",
+     "arrival_date_time": "20261026T192700"
+    },
+    {
+     "type": "public_transport",
+     "duration": 2160,
+     "departure_date_time": "20261026T192700",
+     "arrival_date_time": "20261026T200300",
+     "display_informations": {
+      "commercial_mode": "Bus",
+      "code": "123",
+      "direction": "Mairie d'Issy (Issy-les-Moulineaux)"
+     },
+     "stop_date_times": [
+      {
+       "departure_date_time": "20261026T192700",
+       "arrival_date_time": "20261026T192700",
+       "stop_point": {
+        "id": "stop_point:IDFM:39562",
+        "name": "Porte d'Auteuil - Métro",
+        "coord": {
+         "lat": "48.847381",
+         "lon": "2.258057"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192800",
+       "arrival_date_time": "20261026T192800",
+       "stop_point": {
+        "id": "stop_point:IDFM:39564",
+        "name": "Porte Molitor",
+        "coord": {
+         "lat": "48.845476",
+         "lon": "2.255399"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T192900",
+       "arrival_date_time": "20261026T192900",
+       "stop_point": {
+        "id": "stop_point:IDFM:28124",
+        "name": "Stade Roland Garros",
+        "coord": {
+         "lat": "48.845757",
+         "lon": "2.250054"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193000",
+       "arrival_date_time": "20261026T193000",
+       "stop_point": {
+        "id": "stop_point:IDFM:28126",
+        "name": "Rue des Pins",
+        "coord": {
+         "lat": "48.846574",
+         "lon": "2.246867"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193100",
+       "arrival_date_time": "20261026T193100",
+       "stop_point": {
+        "id": "stop_point:IDFM:19772",
+        "name": "Gambetta",
+        "coord": {
+         "lat": "48.848563",
+         "lon": "2.241442"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193300",
+       "arrival_date_time": "20261026T193300",
+       "stop_point": {
+        "id": "stop_point:IDFM:8399",
+        "name": "Hôpital Ambroise Paré",
+        "coord": {
+         "lat": "48.849221",
+         "lon": "2.237385"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193500",
+       "arrival_date_time": "20261026T193500",
+       "stop_point": {
+        "id": "stop_point:IDFM:28123",
+        "name": "Église",
+        "coord": {
+         "lat": "48.845675",
+         "lon": "2.237000"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193600",
+       "arrival_date_time": "20261026T193600",
+       "stop_point": {
+        "id": "stop_point:IDFM:28128",
+        "name": "Escudier - Marché",
+        "coord": {
+         "lat": "48.843252",
+         "lon": "2.237922"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193700",
+       "arrival_date_time": "20261026T193700",
+       "stop_point": {
+        "id": "stop_point:IDFM:39565",
+        "name": "Jean Jaurès - Métro",
+        "coord": {
+         "lat": "48.841711",
+         "lon": "2.238748"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T193900",
+       "arrival_date_time": "20261026T193900",
+       "stop_point": {
+        "id": "stop_point:IDFM:25542",
+        "name": "Route de la Reine - Jean Jaurès",
+        "coord": {
+         "lat": "48.839536",
+         "lon": "2.240497"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194100",
+       "arrival_date_time": "20261026T194100",
+       "stop_point": {
+        "id": "stop_point:IDFM:25543",
+        "name": "Victor Hugo",
+        "coord": {
+         "lat": "48.839042",
+         "lon": "2.246253"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194200",
+       "arrival_date_time": "20261026T194200",
+       "stop_point": {
+        "id": "stop_point:IDFM:18717",
+        "name": "Gallieni",
+        "coord": {
+         "lat": "48.837104",
+         "lon": "2.245573"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194500",
+       "arrival_date_time": "20261026T194500",
+       "stop_point": {
+        "id": "stop_point:IDFM:28129",
+        "name": "Marcel Sembat",
+        "coord": {
+         "lat": "48.833072",
+         "lon": "2.243738"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194700",
+       "arrival_date_time": "20261026T194700",
+       "stop_point": {
+        "id": "stop_point:IDFM:28121",
+        "name": "Dôme",
+        "coord": {
+         "lat": "48.830509",
+         "lon": "2.245192"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T194800",
+       "arrival_date_time": "20261026T194800",
+       "stop_point": {
+        "id": "stop_point:IDFM:28127",
+        "name": "Rue du Point du Jour",
+        "coord": {
+         "lat": "48.828583",
+         "lon": "2.246296"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195000",
+       "arrival_date_time": "20261026T195000",
+       "stop_point": {
+        "id": "stop_point:IDFM:28122",
+        "name": "Pont de Billancourt",
+        "coord": {
+         "lat": "48.825759",
+         "lon": "2.247876"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195100",
+       "arrival_date_time": "20261026T195100",
+       "stop_point": {
+        "id": "stop_point:IDFM:25888",
+        "name": "Ile Saint Germain",
+        "coord": {
+         "lat": "48.822757",
+         "lon": "2.249499"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195300",
+       "arrival_date_time": "20261026T195300",
+       "stop_point": {
+        "id": "stop_point:IDFM:11234",
+        "name": "Les Moulineaux",
+        "coord": {
+         "lat": "48.821499",
+         "lon": "2.249776"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195500",
+       "arrival_date_time": "20261026T195500",
+       "stop_point": {
+        "id": "stop_point:IDFM:7835",
+        "name": "Paul Besnard",
+        "coord": {
+         "lat": "48.818421",
+         "lon": "2.249412"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195600",
+       "arrival_date_time": "20261026T195600",
+       "stop_point": {
+        "id": "stop_point:IDFM:37837",
+        "name": "Verdun - Jean-Pierre Timbaud",
+        "coord": {
+         "lat": "48.817814",
+         "lon": "2.250197"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195700",
+       "arrival_date_time": "20261026T195700",
+       "stop_point": {
+        "id": "stop_point:IDFM:28131",
+        "name": "Chemin des Vignes",
+        "coord": {
+         "lat": "48.819056",
+         "lon": "2.254619"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195800",
+       "arrival_date_time": "20261026T195800",
+       "stop_point": {
+        "id": "stop_point:IDFM:28137",
+        "name": "Paul Bert",
+        "coord": {
+         "lat": "48.819607",
+         "lon": "2.256450"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T195900",
+       "arrival_date_time": "20261026T195900",
+       "stop_point": {
+        "id": "stop_point:IDFM:22550",
+        "name": "Issy RER",
+        "coord": {
+         "lat": "48.820324",
+         "lon": "2.258864"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T200100",
+       "arrival_date_time": "20261026T200100",
+       "stop_point": {
+        "id": "stop_point:IDFM:39568",
+        "name": "Roger Salengro",
+        "coord": {
+         "lat": "48.823684",
+         "lon": "2.262712"
+        }
+       }
+      },
+      {
+       "departure_date_time": "20261026T200300",
+       "arrival_date_time": "20261026T200300",
+       "stop_point": {
+        "id": "stop_point:IDFM:28132",
+        "name": "Ferber - Galliéni",
+        "coord": {
+         "lat": "48.824913",
+         "lon": "2.266603"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 308,
+     "departure_date_time": "20261026T200300",
+     "arrival_date_time": "20261026T200808"
+    }
+   ]
+  },
+  {
+   "type": "non_pt_walk",
+   "departure_date_time": "20261026T190945",
+   "arrival_date_time": "20261026T202816",
+   "nb_transfers": 0,
+   "sections": [
+    {
+     "type": "street_network",
+     "mode": "walking",
+     "duration": 4711,
+     "departure_date_time": "20261026T190945",
+     "arrival_date_time": "20261026T202816"
+    }
+   ]
+  }
+ ]
+}

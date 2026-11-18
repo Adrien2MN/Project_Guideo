@@ -1,10 +1,12 @@
 """Calcul d'un trajet entre deux points, pour arriver à l'heure ou pour partir à une heure donnée.
 
-Trois sources, de la plus réaliste à la plus grossière :
+Sources, de la plus réaliste à la plus grossière :
 - PRIM (Navitia IDFM) : transports en commun + marche, avec les vrais horaires ;
+- les trajets hybrides (`hybride.py`) : Vélib pour rejoindre ou quitter ces transports ;
 - le réseau des rues de Guideo (si les graphes sont construits) : vélo et marche, pente comprise ;
 - une estimation à vol d'oiseau, quand rien d'autre ne répond (signalée comme telle).
-Parmi les possibilités, on garde la plus rapide et on cite les autres.
+Parmi les possibilités, on garde la meilleure selon la fonction de coût (`cout.py` :
+durée + pénalités de correspondance et de risque Vélib) et on cite les autres.
 """
 
 from __future__ import annotations
@@ -17,7 +19,6 @@ from typing import Optional
 DETOUR = 1.3              # un trajet réel est ~30 % plus long que la ligne droite
 MARCHE_KMH = 4.8
 SEULEMENT_A_PIED_KM = 0.8  # en dessous, on marche : inutile d'interroger PRIM
-VELIB_MIN = 4              # prendre et reposer un Vélib, rejoindre les stations
 ATTENTE_TC_MIN = 8         # accès + attente moyenne, pour l'estimation en transports
 TC_KMH = 20
 
@@ -94,6 +95,10 @@ class _Option:
     duree_s: Optional[float] = None       # trajets sans horaires (rues, estimation)
     depart: Optional[datetime] = None     # trajets à horaires (PRIM)
     arrivee: Optional[datetime] = None
+    correspondances: int = 0              # changements entre lignes de transport
+    avec_velib: bool = False
+    proba_velib: Optional[float] = None   # vélo au départ ET place à l'arrivée (None : inconnu)
+    velo_min: float = 0.0                 # minutes de pédalage (effort)
 
     def placer(self, heure: datetime, arriver: bool) -> tuple[datetime, datetime]:
         if self.depart and self.arrivee:
@@ -127,53 +132,83 @@ def _date_navitia(texte: str) -> datetime:
 class Calculateur:
     """Calcule des trajets. Chaque source est facultative ; le cache évite de refaire un même calcul."""
 
-    def __init__(self, prim=None, rues_velo=None, rues_marche=None):
+    def __init__(self, prim=None, rues_velo=None, rues_marche=None, stations=None,
+                 hybrides: bool = True, parametres_hybride=None, parametres_cout=None):
+        from .cout import ParametresCout
         self.prim = prim              # guideo.prim.client.PrimClient
         self.rues_velo = rues_velo    # guideo.streets.router.StreetRouter (graphe vélo)
         self.rues_marche = rues_marche
+        self.stations = stations      # guideo.velib.stations.StationsVelib (facultatif)
+        self.cout = parametres_cout or ParametresCout()
+        self._hybrideur = None
+        if rues_velo is not None:
+            from .hybride import Hybrideur
+            self._hybrideur = Hybrideur(rues_velo, stations, parametres_hybride)
+        self._hybrides = hybrides
         self._cache: dict = {}
+        self._cache_prim: dict = {}
         self._prim_hs = False
 
     # ------------------------------------------------------------------ sources
-    def _options_prim(self, o: Point, d: Point, heure: datetime, arriver: bool) -> list[_Option]:
+    def _journeys_prim(self, o: Point, d: Point, heure: datetime, arriver: bool) -> list[dict]:
+        """Réponse brute de PRIM (mise en cache : les hybrides la réutilisent)."""
         if self.prim is None or self._prim_hs:
             return []
-        try:
-            donnees = self.prim.journeys((o.lon, o.lat), (d.lon, d.lat), heure,
-                                         datetime_represents="arrival" if arriver else "departure")
-        except Exception as e:  # clé refusée, réseau...
-            print(f"   [PRIM indisponible ({e}) : trajets estimés sans les transports en commun]")
-            self._prim_hs = True
-            return []
+        cle = (o.id, d.id, heure.isoformat(timespec="minutes"), arriver)
+        if cle not in self._cache_prim:
+            try:
+                donnees = self.prim.journeys((o.lon, o.lat), (d.lon, d.lat), heure,
+                                             datetime_represents="arrival" if arriver else "departure")
+            except Exception as e:  # clé refusée, réseau...
+                print(f"   [PRIM indisponible ({e}) : trajets estimés sans les transports en commun]")
+                self._prim_hs = True
+                return []
+            self._cache_prim[cle] = donnees.get("journeys", [])
+        return self._cache_prim[cle]
+
+    def _options_prim(self, o: Point, d: Point, heure: datetime, arriver: bool) -> list[_Option]:
         options = []
-        for j in donnees.get("journeys", []):
+        for j in self._journeys_prim(o, d, heure, arriver):
             try:
                 dep, arr = _date_navitia(j["departure_date_time"]), _date_navitia(j["arrival_date_time"])
             except (KeyError, ValueError):
                 continue
             if (arriver and arr > heure) or (not arriver and dep < heure):
                 continue
-            a_pied = all(s.get("type") != "public_transport" for s in j.get("sections", []))
-            options.append(_Option("marche" if a_pied else "transports", "prim", _resume_prim(j),
-                                   depart=dep, arrivee=arr))
+            n_tc = sum(s.get("type") == "public_transport" for s in j.get("sections", []))
+            options.append(_Option("transports" if n_tc else "marche", "prim", _resume_prim(j),
+                                   depart=dep, arrivee=arr,
+                                   correspondances=int(j.get("nb_transfers", max(n_tc - 1, 0)))))
         return options
 
-    def _options_rues(self, o: Point, d: Point) -> list[_Option]:
+    def _options_hybrides(self, o: Point, d: Point, heure: datetime, arriver: bool) -> list[_Option]:
+        if not self._hybrides or self._hybrideur is None:
+            return []
+        try:
+            return self._hybrideur.options(self._journeys_prim(o, d, heure, arriver), o, d, heure, arriver)
+        except Exception as e:  # un hybride raté ne doit jamais empêcher de proposer un trajet
+            print(f"   [trajets hybrides impossibles : {e}]")
+            return []
+
+    def _options_rues(self, o: Point, d: Point, heure: datetime) -> list[_Option]:
         options = []
-        for routeur, mode, profil_nom in ((self.rues_velo, "velo", "MECHANICAL"), (self.rues_marche, "marche", "WALK")):
-            if routeur is None:
-                continue
-            from guideo.streets import speed
+        from guideo.streets import speed
+        if self.rues_velo is not None:
+            jambe = self._hybrideur.jambe_velib((o.lon, o.lat), (d.lon, d.lat), heure)
+            if jambe is not None:
+                resume = f"Vélib {round(jambe.velo_s / 60)} min"
+                if jambe.station_depart is not None:
+                    resume += f" ({jambe.station_depart.nom} → {jambe.station_arrivee.nom})"
+                if not jambe.verifiee:
+                    resume += " (stations non vérifiées)"
+                options.append(_Option("velo", "rues", resume, duree_s=jambe.duree_s, avec_velib=True,
+                                       proba_velib=jambe.proba, velo_min=jambe.velo_s / 60))
+        if self.rues_marche is not None:
             try:
-                r = routeur.route((o.lon, o.lat), (d.lon, d.lat), getattr(speed, profil_nom))
-            except Exception as e:
-                print(f"   [calcul {mode} impossible : {e}]")
-                continue
-            if mode == "velo":
-                options.append(_Option("velo", "rues", f"Vélib {round(r.duration_s / 60)} min (stations non vérifiées)",
-                                       duree_s=r.duration_s + VELIB_MIN * 60))
-            else:
+                r = self.rues_marche.route((o.lon, o.lat), (d.lon, d.lat), speed.WALK)
                 options.append(_Option("marche", "rues", f"marche {r.distance_m / 1000:.1f} km", duree_s=r.duration_s))
+            except Exception as e:
+                print(f"   [calcul marche impossible : {e}]")
         return options
 
     @staticmethod
@@ -195,15 +230,20 @@ class Calculateur:
         options = []
         if distance_km(o, d) * DETOUR > SEULEMENT_A_PIED_KM:
             options += self._options_prim(o, d, heure, arriver)
-        options += self._options_rues(o, d)
+            options += self._options_hybrides(o, d, heure, arriver)
+        options += self._options_rues(o, d, heure)
         if not options:
             options = self._options_estimees(o, d)
         elif not any(opt.mode == "marche" for opt in options) and distance_km(o, d) * DETOUR <= 2:
             options += [opt for opt in self._options_estimees(o, d) if opt.mode == "marche"]
 
+        from .cout import penalite_min
+
         def cle_tri(opt: _Option):
             dep, arr = opt.placer(heure, arriver)
-            return -dep.timestamp() if arriver else arr.timestamp()  # partir le plus tard / arriver le plus tôt
+            pen = penalite_min(opt.correspondances, opt.proba_velib, opt.avec_velib, self.cout, opt.velo_min) * 60
+            # partir le plus tard / arriver le plus tôt, pénalités comprises
+            return -(dep.timestamp() - pen) if arriver else arr.timestamp() + pen
 
         options.sort(key=cle_tri)
         meilleure = options[0]
@@ -227,8 +267,20 @@ class Calculateur:
         return self._calculer(o, d, heure, arriver=False)
 
 
+def stations_par_defaut(settings):
+    """Positions des stations Vélib (base du collecteur, sinon flux en ligne) + état en temps réel."""
+    from guideo.velib.stations import StationsVelib
+    statut = StationsVelib.statut_temps_reel()
+    try:
+        stations = StationsVelib.depuis_base(settings.velib_db_path, statut=statut)
+        return stations or StationsVelib.depuis_flux(statut=statut)
+    except Exception as e:
+        print(f"   [stations Vélib inconnues ({e}) : temps de Vélib forfaitaires]")
+        return None
+
+
 def calculateur_par_defaut(settings) -> Calculateur:
-    """PRIM si la clé est là, graphes des rues s'ils sont construits, sinon estimations."""
+    """PRIM si la clé est là, graphes des rues s'ils sont construits, stations Vélib, sinon estimations."""
     prim = None
     if settings.prim_api_key:
         from guideo.prim.client import PrimClient
@@ -243,4 +295,5 @@ def calculateur_par_defaut(settings) -> Calculateur:
                 rues[nom] = StreetRouter(load_graph(chemin))
             except Exception as e:
                 print(f"   [graphe {chemin.name} illisible : {e}]")
-    return Calculateur(prim, rues.get("bike"), rues.get("walk"))
+    stations = stations_par_defaut(settings) if rues.get("bike") is not None else None
+    return Calculateur(prim, rues.get("bike"), rues.get("walk"), stations=stations)

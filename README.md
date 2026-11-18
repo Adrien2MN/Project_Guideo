@@ -107,13 +107,27 @@ Quand un événement est validé dans `test_interpreteur.py --discuter`, il entr
 - **Niveau 2** : si un événement finit peu avant (moins de 6 h), on part de là-bas. Si l'écart laisse au moins 30 min à la maison, Guideo te fait repasser chez toi, sinon il calcule le trajet direct. Si même le trajet direct arrive après le début, l'événement porte une alerte. Toute la journée est recalculée à chaque ajout : le trajet retour de l'événement précédent change en conséquence.
 - **Activités souples ou fixes.** Une activité souple (escalade, sport, repas, soirée, visite) peut se prolonger pour partir juste à temps au lieu d'attendre, s'écourter un peu pour ne pas être en retard, ou commencer un peu plus tard si l'on arrive en retard, dans des limites propres à chaque activité. Une activité fixe (cinéma, spectacle, rendez-vous) ne bouge pas : on arrive avant, on repart dès la fin. Le réglage par défaut est dans `connaissances_generales.toml` ; `scripts\agenda.py --souple ID` ou `--fixe ID` le change pour un événement.
 - **Les trajets ne sont pas des événements** : ils sont rattachés à un événement et recalculés en entier à chaque ajout, donc jamais figés et jamais considérés comme un conflit. Dans le `.ics`, ils sont marqués `X-GUIDEO-TYPE:trajet` (catégorie « Trajet »). Pour qu'un trajet devenu inutile disparaisse aussi de ton agenda, abonne-toi au fichier plutôt que de l'importer une fois.
-- **Calcul des trajets** (`src\guideo\trajets`) : PRIM pour les transports en commun (clé `PRIM_API_KEY`), les graphes des rues pour le vélo et la marche s'ils sont construits, sinon une estimation à vol d'oiseau, signalée comme telle. Le plus rapide est retenu, les autres sont cités.
+- **Calcul des trajets** (`src\guideo\trajets`) : PRIM pour les transports en commun (clé `PRIM_API_KEY`), les **trajets hybrides** Vélib + transports, les graphes des rues pour le vélo et la marche s'ils sont construits, sinon une estimation à vol d'oiseau, signalée comme telle. Le meilleur selon la fonction de coût est retenu (voir ci-dessous), les autres sont cités.
 - Les réglages (marge d'arrivée, temps minimal à la maison, fenêtre de 6 h) sont dans `connaissances_generales.toml`, section `[trajets]`.
 
 ```bat
 python scripts\agenda.py                       :: les 7 prochains jours
 python scripts\agenda.py --supprimer ID        :: retire un événement et recalcule la journée
 python scripts\agenda.py --replanifier 2026-11-20
+```
+
+## Trajets hybrides : Vélib + transports
+
+C'est la plus-value de Guideo : éviter les « petits changements » en rejoignant ou en quittant les transports à vélo. Exemple : de Henri-Martin à Issy, Vélib en descente jusqu'à Javel puis RER C direct, au lieu du RER C avec changement de sens à Champ de Mars.
+
+- **Comment** (`trajets/hybride.py`) : Navitia renvoie, pour chaque tronçon, tous ses arrêts et leurs horaires. Guideo essaie de rejoindre en Vélib n'importe quel arrêt d'un tronçon pour monter dans le même train (premier kilomètre), ou de descendre à n'importe quel arrêt pour finir en Vélib (dernier kilomètre). Aucun appel PRIM de plus : on réutilise les horaires déjà reçus.
+- **Le Vélib** compte la marche jusqu'à la station la plus proche, la prise et la dépose du vélo, le trajet sur le graphe avec relief, la marche jusqu'au quai et l'accès au quai. Les stations viennent de la base du collecteur ; pour un départ dans les 20 min, leur état en temps réel écarte les stations vides ou pleines.
+- **La fonction de coût** (`trajets/cout.py`) départage les options en minutes équivalentes : 5 min par correspondance, 2 min si les stations ne sont pas vérifiables, le risque de station vide ou pleine, et l'effort au-delà de 10 min de pédalage. Les horaires affichés restent les vrais.
+- Pour l'essayer en vrai sur les trajets de référence :
+
+```bat
+python scripts\essai_hybride.py                 :: arriver dans 45 min
+python scripts\essai_hybride.py --partir        :: partir maintenant
 ```
 
 ## Le modèle de données
@@ -137,7 +151,8 @@ src/guideo/
   prim/client.py      client de l'API Navitia de PRIM
   memoire/            mémoire personnelle + connaissances générales
   interpreteur/       phrase -> événement (LLM, lecture du texte, cinéma, géocodage)
-  trajets/            trajet entre deux points (PRIM, rues, estimation)
+  trajets/            trajet entre deux points (PRIM, hybrides Vélib + transports, rues, estimation), fonction de coût
+  velib/stations.py   stations Vélib proches d'un point, disponibilité
   agenda/             agenda local, trajets aller/retour, planification de la journée, export .ics
 scripts/              vérifications et statistiques rapides
 tests/
