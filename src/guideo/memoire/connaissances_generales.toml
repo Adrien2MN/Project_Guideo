@@ -46,25 +46,43 @@ fenetre_h = 6
 #   duree_min       durée par défaut en minutes
 #   debut / fin     horaires typiques quand aucune plage n'est dite (ex. une soirée)
 #   [x.heures]      heure de début typique selon la plage dite (ex. repas du midi / du soir)
+#   souple          true si la durée peut s'ajuster aux trajets (escalade) ; false (défaut) si l'activité
+#                   est fixe : on arrive avant, on repart à la fin (cinéma, rendez-vous)
+#   prolonger_max_min / ecourter_max_min   de combien une activité souple peut s'allonger / se raccourcir
 # Une activité sans heure typique déclenche une question ("À quelle heure ?").
 [activites.escalade]
 duree_min = 120
+souple = true
+prolonger_max_min = 60
+ecourter_max_min = 45
 
 [activites.soiree]
 debut = "20:00"
 fin = "00:00"
+souple = true
+prolonger_max_min = 60
+ecourter_max_min = 60
 
 [activites.repas]
 duree_min = 120
+souple = true
+prolonger_max_min = 30
+ecourter_max_min = 15
 [activites.repas.heures]
 midi = "12:00"
 soir = "20:00"
 
 [activites.visite]
 duree_min = 60
+souple = true
+prolonger_max_min = 30
+ecourter_max_min = 30
 
 [activites.sport]
 duree_min = 90
+souple = true
+prolonger_max_min = 30
+ecourter_max_min = 30
 
 [activites.cinema]
 duree_min = 120      # durée du film, utilisée seulement si Allociné ne la donne pas

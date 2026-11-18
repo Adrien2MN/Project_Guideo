@@ -5,6 +5,8 @@ Utilisation (racine du projet, venv activé) :
     python scripts/agenda.py --jour 2026-11-20        # une journée
     python scripts/agenda.py --supprimer ID           # retire un événement et recalcule sa journée
     python scripts/agenda.py --replanifier 2026-11-20 # recalcule les trajets d'une journée (ex. après un changement de domicile)
+    python scripts/agenda.py --souple ID              # la durée de l'événement peut s'ajuster aux trajets
+    python scripts/agenda.py --fixe ID                # on arrive avant, on repart à la fin
 
 À chaque modification, data/agenda/guideo.ics est réécrit : importe-le (ou abonne-toi) dans ton agenda.
 """
@@ -40,8 +42,10 @@ def afficher_jour(agenda: Agenda, jour: date) -> None:
         if e.aller:
             print(f"   {e.aller.depart:%H:%M}  ↳ trajet depuis {e.aller.origine.nom} ({e.aller.duree_min} min, {e.aller.resume})"
                   + (f" — {e.aller.note}" if e.aller.note else ""))
-        fin = f"–{e.fin:%H:%M}" if e.fin else ""
-        print(f"   {e.debut:%H:%M}{fin}  {e.titre} · {e.lieu.nom if e.lieu else 'lieu inconnu'}   [{e.id}]")
+        fin = f"–{e.fin_effective:%H:%M}" if e.fin or e.fin_ajustee else ""
+        ajuste = (f" (prévu {e.debut:%H:%M}–{e.fin_ou_estimee:%H:%M})" if e.debut_ajuste or e.fin_ajustee else "")
+        print(f"   {e.debut_effectif:%H:%M}{fin}  {e.titre} · {e.lieu.nom if e.lieu else 'lieu inconnu'}"
+              f" · {'souple' if e.souple else 'fixe'}{ajuste}   [{e.id}]")
         if e.alerte:
             print(f"          /!\\ {e.alerte}")
         if e.retour and (e.retour.destination.id == "domicile"):
@@ -62,6 +66,8 @@ def main() -> None:
     parser.add_argument("--jour", type=date.fromisoformat)
     parser.add_argument("--supprimer", metavar="ID")
     parser.add_argument("--replanifier", type=date.fromisoformat, metavar="JOUR")
+    parser.add_argument("--souple", metavar="ID")
+    parser.add_argument("--fixe", metavar="ID")
     args = parser.parse_args()
     agenda = Agenda(AGENDA)
 
@@ -70,6 +76,15 @@ def main() -> None:
         print(f"Supprimé : {evt.titre} ({evt.debut:%d/%m %H:%M})")
         replanifier(agenda, evt.debut.date())
         args.jour = evt.debut.date()
+    for id_, souple in ((args.souple, True), (args.fixe, False)):
+        if id_:
+            evt = agenda.trouver(id_)
+            limites = charger_connaissances().souplesse(evt.activite)
+            evt.souple = souple
+            evt.prolonger_max_min = (limites["prolonger_max_min"] or 30) if souple else 0
+            evt.ecourter_max_min = (limites["ecourter_max_min"] or 30) if souple else 0
+            print(f"{evt.titre} : {'souple' if souple else 'fixe'}")
+            args.replanifier = evt.debut.date()
     if args.replanifier:
         replanifier(agenda, args.replanifier)
         args.jour = args.replanifier
