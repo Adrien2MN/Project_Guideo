@@ -149,6 +149,7 @@ def mots_dits(valeur: Optional[str], phrase: str, seuil: int = 40) -> Optional[s
     """
     if not valeur or not normaliser(valeur):
         return None
+    valeur = valeur.strip().strip("\"'«»“”‘’ ").strip()
     if f" {normaliser(valeur)} " in _texte(phrase):
         return valeur
     mots = re.findall(r"[\w'-]+", phrase)

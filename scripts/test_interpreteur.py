@@ -280,7 +280,8 @@ def valider(a: Analyse, memoire: Memoire, connaissances, maintenant: datetime) -
 
 
 def cinema(a: Analyse, source, memoire: Memoire, connaissances, maintenant: datetime, apprendre: bool) -> None:
-    choisi = cine.resoudre_cinema(a, source, memoire, connaissances, maintenant, choix, JOURNAL_GEO)
+    choisi = cine.resoudre_cinema(a, source, memoire, connaissances, maintenant, choix, JOURNAL_GEO,
+                                  demander_texte=texte if apprendre else None)
     if choisi is None:
         return
     s = choisi.seance

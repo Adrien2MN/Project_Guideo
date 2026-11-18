@@ -84,6 +84,7 @@ class SourceAllocine:
         self.cache = cache
         self._cinemas: Optional[list[Cinema]] = None
         self._durees: dict[tuple[str, str], Optional[int]] = {}
+        self.bloque = False  # Allociné refuse l'accès (403) : inutile d'insister cinéma par cinéma
 
     def _lire_cache(self) -> tuple[set[str], dict[str, Cinema]]:
         if not self.cache.exists():
@@ -132,10 +133,16 @@ class SourceAllocine:
         return self._cinemas
 
     def seances(self, cinema: Cinema, jour: date) -> list[Seance]:
+        if self.bloque:
+            return []
         try:
             films = self.api.get_showtime(cinema.id, jour.isoformat())
         except Exception as e:
-            print(f"   [séances indisponibles pour {cinema.nom} : {e}]")
+            if "403" in str(e):
+                self.bloque = True
+                print("   [Allociné refuse l'accès automatique aux séances (erreur 403)]")
+            else:
+                print(f"   [séances indisponibles pour {cinema.nom} : {e}]")
             return []
         resultat = []
         for f in films:
@@ -187,6 +194,8 @@ class SourceFactice:
     def duree(self, seance: Seance) -> Optional[int]:
         return seance.duree_min
 
+    bloque = False
+
     def seances(self, cinema: Cinema, jour: date) -> list[Seance]:
         return [s for s in self._seances if s.cinema.id == cinema.id and s.debut.date() == jour]
 
@@ -219,7 +228,8 @@ def _dans_plage(d: datetime, plage: str, connaissances: Connaissances) -> bool:
 
 
 def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connaissances, maintenant: datetime,
-                    demander: Demander, journal_geo: Optional[Path] = None) -> Optional[ChoixSeance]:
+                    demander: Demander, journal_geo: Optional[Path] = None,
+                    demander_texte: Optional[Callable[[str], str]] = None) -> Optional[ChoixSeance]:
     if not a.film or not a.zone:
         print("   Il me faut le film et le quartier.")
         return None
@@ -242,6 +252,10 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
         seances = [s for i in proches for s in source.seances(tous[i], jour) if s.debut >= maintenant]
         if any(fuzz.token_set_ratio(normaliser(a.film), normaliser(s.film)) >= SEUIL_TITRE for s in seances):
             break  # le film passe près d'ici : inutile d'élargir
+        if source.bloque:
+            break
+    if source.bloque:
+        return _sans_seances(a, jour, tous, distances, memoire, connaissances, pos, demander, demander_texte)
     if not seances:
         print(f"   Aucune séance trouvée à moins de {RAYONS_KM[-1]} km de {a.zone} le {jour:%d/%m}.")
         return None
@@ -318,3 +332,36 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
         print(f"   [durée du film inconnue : {duree} min par défaut]")
     seance.duree_min = duree
     return ChoixSeance(seance, seance.debut + timedelta(minutes=PUBS_MIN + duree), a.zone, pos)
+
+
+def _sans_seances(a: Analyse, jour: date, tous: dict, distances: dict, memoire: Memoire,
+                  connaissances: Connaissances, pos, demander: Demander,
+                  demander_texte: Optional[Callable[[str], str]]) -> Optional[ChoixSeance]:
+    """Mode dégradé quand les séances sont inaccessibles : l'utilisateur choisit le cinéma et donne l'heure."""
+    if demander_texte is None:
+        return None
+    print("   Je ne peux pas lire les séances : choisis le cinéma et donne-moi l'heure de la séance.")
+
+    def habitude(c: Cinema) -> int:
+        lieu = memoire.lieu_par_ref(f"allocine:{c.id}")
+        return memoire.nb_observations(lieu["id"]) if lieu else 0
+
+    proches = sorted((i for i, d in distances.items() if d <= RAYONS_KM[0]),
+                     key=lambda i: (-habitude(tous[i]), distances[i]))[:8]
+    if not proches:
+        return None
+    i = demander("Quel cinéma ?", [f"{tous[c].nom} ({distances[c]:.1f} km)" for c in proches])
+    if i is None:
+        return None
+    cinema = tous[proches[i]]
+    heure = a.heure_debut
+    if heure is None:
+        from .texte import heures_dites
+        heure, _ = heures_dites(demander_texte("À quelle heure est la séance ?"))
+        if heure is None:
+            return None
+    debut = datetime.combine(jour, datetime.strptime(heure, "%H:%M").time())
+    duree = connaissances.duree_type("cinema") or 120
+    print(f"   [durée du film inconnue : {duree} min par défaut, plus {PUBS_MIN} min de publicités]")
+    seance = Seance(cinema, a.film, duree, "?", debut)
+    return ChoixSeance(seance, debut + timedelta(minutes=PUBS_MIN + duree), a.zone, pos)
