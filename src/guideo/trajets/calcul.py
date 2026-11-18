@@ -208,7 +208,12 @@ class Calculateur:
         options.sort(key=cle_tri)
         meilleure = options[0]
         dep, arr = meilleure.placer(heure, arriver)
-        autres = list(dict.fromkeys(opt.court(heure, arriver) for opt in options[1:] if opt.mode != meilleure.mode))
+        # Une seule alternative par mode (la meilleure de chaque), sans répéter celui retenu
+        autres, modes_vus = [], {meilleure.mode}
+        for opt in options[1:]:
+            if opt.mode not in modes_vus:
+                modes_vus.add(opt.mode)
+                autres.append(opt.court(heure, arriver))
         trajet = Trajet(o, d, dep, arr, meilleure.mode, meilleure.resume, meilleure.source, autres[:3])
         self._cache[cle] = trajet
         return trajet
