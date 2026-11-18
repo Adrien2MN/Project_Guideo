@@ -33,6 +33,15 @@ de = "21:00"
 a = "23:59"
 heure_type = "22:00"
 
+# Trajets autour d'un événement (agenda) :
+#   marge_arrivee_min       arriver un peu avant le début
+#   temps_min_domicile_min  entre deux activités, repasser chez soi seulement si on y reste au moins ça
+#   fenetre_h               un événement fini depuis plus longtemps ne dit plus où l'on est
+[trajets]
+marge_arrivee_min = 5
+temps_min_domicile_min = 30
+fenetre_h = 6
+
 # Activités : durée typique, et éventuellement heures typiques.
 #   duree_min       durée par défaut en minutes
 #   debut / fin     horaires typiques quand aucune plage n'est dite (ex. une soirée)
