@@ -136,7 +136,9 @@ def nouveau_lieu(a: Analyse, dit: Optional[str], memoire: Memoire) -> bool:
         return False
     c = candidats[i]
     nom = texte(f"Nom à retenir [{c['nom']}]") or c["nom"]
-    alias = list({normaliser(x): x for x in (dit, recherche) if x and normaliser(x) != normaliser(nom)}.values())
+    # Alias : les mots dits pour désigner le lieu, pas une adresse tapée pour le chercher
+    alias = list({normaliser(x): x for x in (dit, recherche)
+                  if x and normaliser(x) != normaliser(nom) and not any(c.isdigit() for c in x)}.values())
     lieu = memoire.ajouter_lieu(nom, a.activite, c["lat"], c["lon"], adresse=c["adresse"],
                                 alias=alias, source="reponse")
     print(f"   [mémoire : nouveau lieu « {nom} » ({a.activite})"
