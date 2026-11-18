@@ -49,6 +49,13 @@ class Connaissances:
     def duree_type(self, activite: str) -> Optional[int]:
         return self.activite(activite).get("duree_min")
 
+    def souplesse(self, activite: str) -> dict:
+        """{"souple", "prolonger_max_min", "ecourter_max_min"} : fixe par défaut."""
+        a = self.activite(activite)
+        souple = bool(a.get("souple", False))
+        return {"souple": souple, "prolonger_max_min": a.get("prolonger_max_min", 0) if souple else 0,
+                "ecourter_max_min": a.get("ecourter_max_min", 0) if souple else 0}
+
 
 def charger_connaissances(chemin: Path = FICHIER) -> Connaissances:
     with open(chemin, "rb") as f:

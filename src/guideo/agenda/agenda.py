@@ -1,8 +1,10 @@
 """Agenda de Guideo : les événements validés, chacun encadré de son trajet aller et de son trajet retour.
 
 Stockage : data/agenda/agenda.json (privé, hors git). Export : data/agenda/guideo.ics, à importer
-ou à abonner dans Google Agenda, Apple Calendrier, Outlook... Les trajets y apparaissent comme
-des événements à part ("Trajet → UGC Montparnasse"), pour bloquer le temps de déplacement.
+ou à abonner dans Google Agenda, Apple Calendrier, Outlook... Les trajets y apparaissent pour
+bloquer le temps de déplacement ("Trajet → UGC Montparnasse"), mais marqués X-GUIDEO-TYPE:trajet :
+ce ne sont pas des rendez-vous. Le fichier est réécrit en entier à chaque export, donc un trajet
+devenu inutile disparaît (si l'agenda est ABONNÉ au fichier ; un import ponctuel, lui, se fige).
 """
 
 from __future__ import annotations
@@ -29,14 +31,31 @@ class Evenement:
     fin: Optional[datetime]
     lieu: Optional[Point]
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:10])
+    # Souple : la durée peut bouger (escalade). Fixe : on arrive avant, on part à la fin (cinéma).
+    souple: bool = False
+    prolonger_max_min: int = 0
+    ecourter_max_min: int = 0
+    # Les trajets ne sont PAS des événements : ils sont rattachés à un événement et entièrement
+    # recalculés à chaque planification de la journée (jamais figés, jamais des obstacles).
     aller: Optional[Trajet] = None
     retour: Optional[Trajet] = None
     alerte: Optional[str] = None
+    debut_ajuste: Optional[datetime] = None   # posés par la planification (événements souples)
+    fin_ajustee: Optional[datetime] = None
     cree_le: str = field(default_factory=lambda: datetime.now().isoformat(timespec="seconds"))
 
     @property
     def fin_ou_estimee(self) -> datetime:
+        """Fin PRÉVUE (ou début + 1 h si inconnue)."""
         return self.fin or self.debut + timedelta(hours=1)
+
+    @property
+    def debut_effectif(self) -> datetime:
+        return self.debut_ajuste or self.debut
+
+    @property
+    def fin_effective(self) -> datetime:
+        return self.fin_ajustee or self.fin_ou_estimee
 
     def en_dict(self) -> dict:
         return {"id": self.id, "titre": self.titre, "activite": self.activite,
@@ -45,6 +64,10 @@ class Evenement:
                 "lieu": self.lieu.en_dict() if self.lieu else None,
                 "aller": self.aller.en_dict() if self.aller else None,
                 "retour": self.retour.en_dict() if self.retour else None,
+                "souple": self.souple, "prolonger_max_min": self.prolonger_max_min,
+                "ecourter_max_min": self.ecourter_max_min,
+                "debut_ajuste": self.debut_ajuste.isoformat(timespec="minutes") if self.debut_ajuste else None,
+                "fin_ajustee": self.fin_ajustee.isoformat(timespec="minutes") if self.fin_ajustee else None,
                 "alerte": self.alerte, "cree_le": self.cree_le}
 
     @classmethod
@@ -52,7 +75,10 @@ class Evenement:
         return cls(titre=d["titre"], activite=d["activite"], debut=datetime.fromisoformat(d["debut"]),
                    fin=datetime.fromisoformat(d["fin"]) if d.get("fin") else None, lieu=Point.depuis(d.get("lieu")),
                    id=d["id"], aller=Trajet.depuis(d.get("aller")), retour=Trajet.depuis(d.get("retour")),
-                   alerte=d.get("alerte"), cree_le=d.get("cree_le", ""))
+                   alerte=d.get("alerte"), cree_le=d.get("cree_le", ""), souple=d.get("souple", False),
+                   prolonger_max_min=d.get("prolonger_max_min", 0), ecourter_max_min=d.get("ecourter_max_min", 0),
+                   debut_ajuste=datetime.fromisoformat(d["debut_ajuste"]) if d.get("debut_ajuste") else None,
+                   fin_ajustee=datetime.fromisoformat(d["fin_ajustee"]) if d.get("fin_ajustee") else None)
 
 
 class Agenda:
@@ -103,10 +129,13 @@ class Agenda:
         trajets_vus = set()
         for e in sorted(self.evenements, key=lambda e: e.debut):
             description = f"Lieu : {e.lieu.nom}" if e.lieu else "Lieu inconnu"
+            description += "\nSouple : la durée peut s'ajuster aux trajets" if e.souple else "\nFixe"
+            if e.debut_ajuste or e.fin_ajustee:
+                description += f"\nPrévu : {e.debut:%H:%M}–{e.fin_ou_estimee:%H:%M}, ajusté aux trajets"
             if e.alerte:
                 description += f"\nAttention : {e.alerte}"
-            lignes += _vevent(f"{e.id}@guideo", horodatage, e.debut, e.fin_ou_estimee, e.titre,
-                              e.lieu.nom if e.lieu else None, description, e.lieu)
+            lignes += _vevent(f"{e.id}@guideo", horodatage, e.debut_effectif, e.fin_effective, e.titre,
+                              e.lieu.nom if e.lieu else None, description, e.lieu, "evenement")
             for t in (e.aller, e.retour):
                 if t is None or t.id in trajets_vus:
                     continue  # un trajet direct entre deux événements n'apparaît qu'une fois
@@ -114,7 +143,7 @@ class Agenda:
                 desc = t.ligne() + (f"\n{t.note}" if t.note else "")
                 uid = hashlib.sha1(t.id.encode()).hexdigest()[:16]
                 lignes += _vevent(f"{uid}@guideo-trajet", horodatage, t.depart, t.arrivee,
-                                  f"Trajet → {t.destination.nom}", t.origine.nom, desc, None)
+                                  f"Trajet → {t.destination.nom}", t.origine.nom, desc, None, "trajet")
         lignes.append("END:VCALENDAR")
         chemin.parent.mkdir(parents=True, exist_ok=True)
         chemin.write_text("\r\n".join(_plier(l) for l in lignes) + "\r\n", encoding="utf-8")
@@ -125,11 +154,13 @@ def _echapper(texte: str) -> str:
     return texte.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
-def _vevent(uid, horodatage, debut, fin, titre, lieu, description, point: Optional[Point]) -> list[str]:
+def _vevent(uid, horodatage, debut, fin, titre, lieu, description, point: Optional[Point], type_: str) -> list[str]:
     lignes = ["BEGIN:VEVENT", f"UID:{uid}", f"DTSTAMP:{horodatage}",
               # heures "flottantes" (heure locale de l'utilisateur, ici Paris)
               f"DTSTART:{debut:%Y%m%dT%H%M%S}", f"DTEND:{fin:%Y%m%dT%H%M%S}",
-              f"SUMMARY:{_echapper(titre)}", f"DESCRIPTION:{_echapper(description)}"]
+              f"SUMMARY:{_echapper(titre)}", f"DESCRIPTION:{_echapper(description)}",
+              # Marqueurs : un agenda (ou Guideo, en relisant ce fichier) sait qu'un trajet n'est pas un rendez-vous
+              f"CATEGORIES:Guideo,{'Trajet' if type_ == 'trajet' else 'Événement'}", f"X-GUIDEO-TYPE:{type_}"]
     if lieu:
         lignes.append(f"LOCATION:{_echapper(lieu)}")
     if point:

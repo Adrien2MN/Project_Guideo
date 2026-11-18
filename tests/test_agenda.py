@@ -1,3 +1,4 @@
+import hashlib
 from datetime import date, datetime
 
 import pytest
@@ -25,8 +26,16 @@ def cinema(agenda, debut="17:30", fin="20:44"):
     return agenda.ajouter(Evenement("Les Misérables", "cinema", h(debut), h(fin), UGC))
 
 
-def escalade(agenda, debut, fin):
-    return agenda.ajouter(Evenement("Escalade", "escalade", h(debut), h(fin), ISSY))
+def escalade(agenda, debut, fin, souple=True):
+    """Activité souple : peut s'allonger d'1 h ou se raccourcir de 45 min."""
+    return agenda.ajouter(Evenement("Escalade", "escalade", h(debut), h(fin), ISSY,
+                                    souple=souple, prolonger_max_min=60 if souple else 0,
+                                    ecourter_max_min=45 if souple else 0))
+
+
+def rendez_vous(agenda, debut, fin, lieu=ISSY):
+    """Activité fixe, au même endroit que l'escalade."""
+    return agenda.ajouter(Evenement("Rendez-vous", "rendez-vous", h(debut), h(fin), lieu))
 
 
 def test_niveau_1_depuis_et_vers_le_domicile(agenda):
@@ -41,29 +50,79 @@ def test_niveau_2_repasse_chez_soi(agenda):
     esc, cine = escalade(agenda, "14:00", "16:00"), cinema(agenda)
     assert planifier_jour(agenda, JOUR, Calculateur(), MAISON) == []
     assert esc.retour.destination == MAISON and cine.aller.origine == MAISON
-    assert "repasser chez toi" in cine.aller.note
+    assert "repasser chez toi" in cine.aller.note and esc.fin_ajustee is None
 
 
-def test_niveau_2_pas_le_temps_de_rentrer(agenda):
-    esc, cine = escalade(agenda, "14:00", "16:45"), cinema(agenda)
+# --- après une activité FIXE : on part dès la fin --------------------------------------------
+def test_fixe_on_part_a_la_fin_quitte_a_arriver_en_avance(agenda):
+    rdv, cine = rendez_vous(agenda, "14:00", "16:45"), cinema(agenda)
     planifier_jour(agenda, JOUR, Calculateur(), MAISON)
-    assert cine.aller.origine == ISSY and esc.retour is cine.aller       # un seul trajet, partagé
-    assert cine.aller.depart >= h("16:45") and cine.aller.arrivee == h("17:25")
-    assert cine.alerte is None
+    assert cine.aller.origine == ISSY and rdv.retour is cine.aller       # un seul trajet, partagé
+    assert cine.aller.depart == h("16:45") and cine.aller.arrivee < h("17:25")
+    assert "en avance" in cine.aller.note and rdv.fin_ajustee is None and cine.alerte is None
 
 
-def test_niveau_2_retard(agenda):
-    escalade(agenda, "14:00", "17:20")
+def test_fixe_suivi_d_un_fixe_en_retard(agenda):
+    rendez_vous(agenda, "14:00", "17:20")
     cine = cinema(agenda)
     planifier_jour(agenda, JOUR, Calculateur(), MAISON)
     assert cine.aller.depart == h("17:20") and "après le début" in cine.alerte
 
 
-def test_chevauchement(agenda):
-    escalade(agenda, "16:00", "18:00")
+# --- après une activité SOUPLE : on ajuste sa durée -----------------------------------------
+def test_souple_prolongee_au_lieu_d_attendre(agenda):
+    esc, cine = escalade(agenda, "14:00", "16:45"), cinema(agenda)
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert esc.fin_ajustee == cine.aller.depart > h("16:45")
+    assert cine.aller.arrivee == h("17:25") and "prolongé" in cine.aller.note
+
+
+def test_souple_ecourtee_pour_arriver_a_l_heure(agenda):
+    esc, cine = escalade(agenda, "14:00", "17:15"), cinema(agenda)
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert esc.fin_ajustee == cine.aller.depart < h("17:15")
+    assert cine.aller.arrivee == h("17:25") and "écourté" in cine.aller.note and cine.alerte is None
+
+
+def test_souple_ecourtee_au_maximum_puis_retard(agenda):
+    esc, cine = escalade(agenda, "14:00", "17:50"), cinema(agenda)   # finit après le début du film
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert esc.fin_ajustee == h("17:05")                               # 17:50 - 45 min au maximum
+    assert "chevauche" in cine.alerte and "après le début" in cine.alerte
+
+
+def test_arrivee_en_retard_a_une_activite_souple(agenda):
+    cine = cinema(agenda, "14:00", "17:20")
+    esc = agenda.ajouter(Evenement("Escalade", "escalade", h("17:30"), h("19:30"), ISSY,
+                                   souple=True, prolonger_max_min=60, ecourter_max_min=45))
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert cine.retour.depart == h("17:20")                            # le film est fixe
+    assert esc.debut_ajuste == esc.aller.arrivee > h("17:30") and esc.alerte is None
+
+
+# --- les trajets ne sont pas des événements -----------------------------------------------
+def test_les_trajets_sont_remplaces_pas_figes(agenda, tmp_path):
     cine = cinema(agenda)
     planifier_jour(agenda, JOUR, Calculateur(), MAISON)
-    assert "chevauche" in cine.alerte
+    ancien = cine.aller
+    agenda.exporter_ics(tmp_path / "avant.ics")
+    escalade(agenda, "14:00", "16:45")                                  # nouvel événement juste avant
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert len(agenda.evenements) == 2                                  # les trajets ne sont pas dans la liste
+    assert cine.aller.id != ancien.id and cine.aller.origine == ISSY    # l'ancien aller depuis chez toi a disparu
+    ics = agenda.exporter_ics(tmp_path / "apres.ics").read_bytes().decode()
+    assert hashlib.sha1(ancien.id.encode()).hexdigest()[:16] not in ics   # absent du nouvel export
+    assert ics.count("X-GUIDEO-TYPE:trajet") == 3 and ics.count("X-GUIDEO-TYPE:evenement") == 2
+
+
+def test_un_trajet_n_est_pas_un_obstacle(agenda):
+    cine = cinema(agenda)
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    debut_trajet = cine.aller.depart                                    # ~16:59, depuis chez toi
+    appel = rendez_vous(agenda, "16:30", "17:00", lieu=MAISON)          # pendant ce trajet
+    planifier_jour(agenda, JOUR, Calculateur(), MAISON)
+    assert appel.alerte is None and cine.alerte is None                 # pas de conflit avec un trajet
+    assert cine.aller.depart == h("17:00") > debut_trajet               # le trajet s'est décalé
 
 
 def test_long_trou_on_part_de_chez_soi(agenda):

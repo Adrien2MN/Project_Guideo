@@ -341,7 +341,8 @@ def ajouter_a_l_agenda(titre: str, activite: str, debut: datetime, fin: Optional
     agenda = Agenda(AGENDA)
     jour = debut.date()
     avant = photographier(agenda, jour)
-    evt = agenda.ajouter(Evenement(titre, activite, debut, fin, lieu))
+    evt = agenda.ajouter(Evenement(titre, activite, debut, fin, lieu, **connaissances.souplesse(activite)))
+    ajustes_avant = {e.id: (e.debut_effectif, e.fin_effective) for e in agenda.du_jour(jour)}
     for message in planifier_jour(agenda, jour, calculateur(), point_domicile(memoire),
                                   Parametres.depuis(connaissances.trajets)):
         print(f"   {message}")
@@ -353,6 +354,12 @@ def ajouter_a_l_agenda(titre: str, activite: str, debut: datetime, fin: Optional
             print(f"   {sens} : {t.ligne()}" + (f"\n            ({t.note})" if t.note else ""))
     if evt.alerte:
         print(f"   /!\\ {evt.alerte}")
+    if evt.debut_ajuste:
+        print(f"   « {evt.titre} » commencera vers {evt.debut_ajuste:%H:%M} (activité souple)")
+    for e in agenda.du_jour(jour):
+        if e.id != evt.id and ajustes_avant.get(e.id) != (e.debut_effectif, e.fin_effective):
+            print(f"   Changé : « {e.titre} » se fera de {e.debut_effectif:%H:%M} à {e.fin_effective:%H:%M}"
+                  f" (prévu {e.debut:%H:%M}–{e.fin_ou_estimee:%H:%M})")
     for e, sens, t in trajets_modifies(avant, agenda, jour):
         if e.id != evt.id:
             print(f"   Changé : {sens} de « {e.titre} » → {t.ligne()}")
