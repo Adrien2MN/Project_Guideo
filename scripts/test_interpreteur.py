@@ -289,9 +289,9 @@ def cinema(a: Analyse, source, memoire: Memoire, connaissances, maintenant: date
           f" · {s.debut:%H:%M} → {choisi.fin:%H:%M}")
     if not apprendre or not oui("Valider ?"):
         return
-    lieu = memoire.lieu_par_ref(f"allocine:{s.cinema.id}") or memoire.ajouter_lieu(
-        s.cinema.nom, "cinema", s.cinema.lat, s.cinema.lon, adresse=s.cinema.adresse,
-        ref=f"allocine:{s.cinema.id}", source="choix")
+    ref = cine.ref_cinema(source, s.cinema)
+    lieu = memoire.lieu_par_ref(ref) or memoire.ajouter_lieu(
+        s.cinema.nom, "cinema", s.cinema.lat, s.cinema.lon, adresse=s.cinema.adresse, ref=ref, source="choix")
     nouvelle_zone = not memoire.chercher(choisi.zone, types=("zones",))
     if nouvelle_zone:
         memoire.ajouter_zone(choisi.zone, *choisi.zone_pos, source="confirmation")
@@ -336,7 +336,13 @@ def main() -> None:
         args.memoire = DATA / "memoire" / ("memoire_test.json" if args.faux else "memoire.json")
     memoire = Memoire(args.memoire, lecture_seule=not args.discuter)
     connaissances = charger_connaissances()
-    source = cine.SourceFactice() if args.faux else cine.SourceAllocine(cache=DATA / "cinemas_cache.json")
+    if args.faux:
+        source = cine.SourceFactice()
+    elif load_settings().api_cinema_key:
+        source = cine.SourceApiCinema(load_settings().api_cinema_key, cache_dir=DATA / "cache" / "api_cinema")
+    else:
+        source = cine.SourceFactice()
+        print("Pas de clé API_CINEMA_KEY dans .env : séances factices.")
     print(f"Mémoire : {args.memoire} — {memoire.resume()}")
 
     if args.phrase:

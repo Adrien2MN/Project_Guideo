@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 @dataclass(frozen=True)
 class Settings:
     prim_api_key: str | None
+    api_cinema_key: str | None
     data_dir: Path
     velib_poll_seconds: int
 
@@ -33,6 +34,7 @@ def load_settings() -> Settings:
     data_dir = Path(os.getenv("GUIDEO_DATA_DIR", "./data")).expanduser().resolve()
     return Settings(
         prim_api_key=os.getenv("PRIM_API_KEY") or None,
+        api_cinema_key=os.getenv("API_CINEMA_KEY") or None,
         data_dir=data_dir,
         velib_poll_seconds=int(os.getenv("VELIB_POLL_SECONDS", "60")),
     )

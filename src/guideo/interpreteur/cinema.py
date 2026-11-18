@@ -48,6 +48,7 @@ class Seance:
     duree_min: Optional[int]
     version: str
     debut: datetime
+    film_id: Optional[str] = None   # identifiant du film dans la source, pour retrouver sa durée
 
 
 @dataclass
@@ -166,6 +167,97 @@ class SourceAllocine:
         return self._durees.get(cle)
 
 
+class SourceApiCinema:
+    """Séances via API Cinéma (api-cinema.com), avec une clé personnelle (API_CINEMA_KEY dans .env).
+
+    Le compte gratuit donne 100 requêtes par semaine : une recherche de séances coûte une requête
+    pour toute la zone (plus une pour la durée du film), et les réponses sont gardées en cache.
+    """
+
+    PREFIXE = "apicinema"
+    URL = "https://api.api-cinema.com/v1"
+    VERSIONS = {"UNKNOWN": "?"}
+    CACHE_SEANCES_H = 6        # les séances changent peu dans la journée
+    CACHE_FILMS_J = 30
+
+    def __init__(self, cle: str, cache_dir: Path = Path("data/cache/api_cinema")):
+        if not cle:
+            raise ValueError("clé API Cinéma manquante : ajoute API_CINEMA_KEY=... dans le fichier .env")
+        self.cle = cle
+        self.cache_dir = cache_dir
+        self.bloque = False
+        self._durees: dict[str, Optional[int]] = {}
+
+    def _get(self, chemin: str, params: dict, duree_cache_s: float):
+        import hashlib
+
+        import httpx
+
+        nom = hashlib.sha1(json.dumps([chemin, params], sort_keys=True).encode()).hexdigest()[:16]
+        fichier = self.cache_dir / f"{nom}.json"
+        if fichier.exists() and time.time() - fichier.stat().st_mtime < duree_cache_s:
+            return json.loads(fichier.read_text(encoding="utf-8"))
+        r = httpx.get(f"{self.URL}{chemin}", params=params, timeout=20,
+                      headers={"Authorization": f"Bearer {self.cle}", "User-Agent": "Guideo/0.1 (projet personnel)"})
+        reste = r.headers.get("X-Weekly-Quota-Remaining")
+        if reste is not None:
+            print(f"   [API Cinéma : {reste} requête(s) restante(s) cette semaine]")
+        if r.status_code == 429:
+            self.bloque = True
+            print(f"   [API Cinéma : quota ou limite atteint(e) — {r.json().get('message', '')}]")
+            return None
+        if r.status_code in (401, 403):
+            self.bloque = True
+            print(f"   [API Cinéma refuse la requête ({r.status_code}) : vérifie la clé — {r.text[:200]}]")
+            return None
+        r.raise_for_status()
+        donnees = r.json()
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        fichier.write_text(json.dumps(donnees, ensure_ascii=False), encoding="utf-8")
+        return donnees
+
+    def seances_autour(self, pos: tuple[float, float], rayon_km: float, jour: date) -> list[Seance]:
+        params = {"near": f"{pos[0]:.5f},{pos[1]:.5f}", "radius_km": rayon_km, "date": jour.isoformat(),
+                  "include": "movie,cinema", "limit": 1000}
+        seances, offset = [], 0
+        while True:
+            donnees = self._get("/showtimes", {**params, "offset": offset}, self.CACHE_SEANCES_H * 3600)
+            if not donnees:
+                break
+            for s in donnees.get("data", []):
+                if s.get("removedAt"):
+                    continue  # séance annulée
+                c, m = s.get("cinema") or {}, s.get("movie") or {}
+                cinema = Cinema(id=str(c.get("id") or s.get("cinemaId")), nom=c.get("name", "?"),
+                                adresse=", ".join(x for x in (c.get("address"), c.get("city")) if x),
+                                lat=c.get("lat"), lon=c.get("lng"))
+                duree = m.get("durationMin")
+                if m.get("id") and duree:
+                    self._durees[m["id"]] = duree
+                version = self.VERSIONS.get(s.get("version"), s.get("version") or "?")
+                seances.append(Seance(cinema, m.get("title") or "?", duree, version,
+                                      datetime.fromisoformat(s["startsAt"][:16]), m.get("id") or s.get("movieId")))
+            meta = donnees.get("meta", {})
+            offset += len(donnees.get("data", []))
+            if not donnees.get("data") or offset >= (meta.get("total") or 0):
+                break
+        print(f"   [API Cinéma : {len(seances)} séance(s) à moins de {rayon_km} km le {jour:%d/%m}]")
+        return seances
+
+    def duree(self, seance: Seance) -> Optional[int]:
+        film_id = seance.film_id
+        if not film_id:
+            return None
+        if film_id not in self._durees:
+            donnees = self._get(f"/movies/{film_id}", {}, self.CACHE_FILMS_J * 86400)
+            film = (donnees or {}).get("data", donnees) or {}
+            self._durees[film_id] = film.get("durationMin") if isinstance(film, dict) else None
+        return self._durees[film_id]
+
+    def cinemas(self) -> list[Cinema]:
+        return []  # les cinémas arrivent avec les séances (seances_autour)
+
+
 class SourceFactice:
     """Séances inventées, pour tester la logique sans réseau. Tout est aujourd'hui."""
 
@@ -198,6 +290,11 @@ class SourceFactice:
 
     def seances(self, cinema: Cinema, jour: date) -> list[Seance]:
         return [s for s in self._seances if s.cinema.id == cinema.id and s.debut.date() == jour]
+
+
+def ref_cinema(source, cinema: Cinema) -> str:
+    """Identifiant d'un cinéma dans sa source (ex. "apicinema:cnc_8422"), gardé dans la mémoire."""
+    return f"{getattr(source, 'PREFIXE', 'allocine')}:{cinema.id}"
 
 
 def localiser_zone(zone: str, memoire: Memoire, journal: Optional[Path] = None,
@@ -240,7 +337,14 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
     if pos is None:
         print(f"   Je ne trouve pas où est {a.zone!r}.")
         return None
-    tous = {c.id: c for c in source.cinemas()}
+    if hasattr(source, "seances_autour"):
+        # Une seule requête pour toute la zone (au plus grand rayon), filtrée ensuite par distance
+        autour = [s for s in source.seances_autour(pos, RAYONS_KM[-1], jour) if s.debut >= maintenant]
+        tous = {s.cinema.id: s.cinema for s in autour}
+        par_cinema = lambda c, j: [s for s in autour if s.cinema.id == c.id]
+    else:
+        tous = {c.id: c for c in source.cinemas()}
+        par_cinema = lambda c, j: [s for s in source.seances(c, j) if s.debut >= maintenant]
     distances = {c.id: geo.distance_km(*pos, c.lat, c.lon) for c in tous.values() if c.lat is not None}
     seances = []
     for rayon in RAYONS_KM:
@@ -249,13 +353,13 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
             continue
         print(f"   [{len(proches)} cinéma(s) à moins de {rayon} km : "
               + ", ".join(f"{tous[i].nom} ({distances[i]:.1f} km)" for i in proches) + "]")
-        seances = [s for i in proches for s in source.seances(tous[i], jour) if s.debut >= maintenant]
+        seances = [s for i in proches for s in par_cinema(tous[i], jour)]
         if any(fuzz.token_set_ratio(normaliser(a.film), normaliser(s.film)) >= SEUIL_TITRE for s in seances):
             break  # le film passe près d'ici : inutile d'élargir
         if source.bloque:
             break
     if source.bloque:
-        return _sans_seances(a, jour, tous, distances, memoire, connaissances, pos, demander, demander_texte)
+        return _sans_seances(a, jour, source, tous, distances, memoire, connaissances, pos, demander, demander_texte)
     if not seances:
         print(f"   Aucune séance trouvée à moins de {RAYONS_KM[-1]} km de {a.zone} le {jour:%d/%m}.")
         return None
@@ -301,7 +405,7 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
 
     # Cinéma (les habituels d'abord, puis du plus proche au plus loin), puis séance
     def habitude(c: Cinema) -> int:
-        lieu = memoire.lieu_par_ref(f"allocine:{c.id}")
+        lieu = memoire.lieu_par_ref(ref_cinema(source, c))
         return memoire.nb_observations(lieu["id"]) if lieu else 0
 
     filtrees.sort(key=lambda s: (-habitude(s.cinema), distances[s.cinema.id]))
@@ -334,7 +438,7 @@ def resoudre_cinema(a: Analyse, source, memoire: Memoire, connaissances: Connais
     return ChoixSeance(seance, seance.debut + timedelta(minutes=PUBS_MIN + duree), a.zone, pos)
 
 
-def _sans_seances(a: Analyse, jour: date, tous: dict, distances: dict, memoire: Memoire,
+def _sans_seances(a: Analyse, jour: date, source, tous: dict, distances: dict, memoire: Memoire,
                   connaissances: Connaissances, pos, demander: Demander,
                   demander_texte: Optional[Callable[[str], str]]) -> Optional[ChoixSeance]:
     """Mode dégradé quand les séances sont inaccessibles : l'utilisateur choisit le cinéma et donne l'heure."""
@@ -343,12 +447,13 @@ def _sans_seances(a: Analyse, jour: date, tous: dict, distances: dict, memoire: 
     print("   Je ne peux pas lire les séances : choisis le cinéma et donne-moi l'heure de la séance.")
 
     def habitude(c: Cinema) -> int:
-        lieu = memoire.lieu_par_ref(f"allocine:{c.id}")
+        lieu = memoire.lieu_par_ref(ref_cinema(source, c))
         return memoire.nb_observations(lieu["id"]) if lieu else 0
 
     proches = sorted((i for i, d in distances.items() if d <= RAYONS_KM[0]),
                      key=lambda i: (-habitude(tous[i]), distances[i]))[:8]
     if not proches:
+        print("   Et je ne connais pas les cinémas de ce quartier : impossible de proposer une séance.")
         return None
     i = demander("Quel cinéma ?", [f"{tous[c].nom} ({distances[c]:.1f} km)" for c in proches])
     if i is None:
