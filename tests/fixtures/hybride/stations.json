@@ -1,0 +1,1102 @@
+[
+ {
+  "station_id": 213688169,
+  "name": "Benjamin Godard - Victor Hugo",
+  "lat": 48.865983,
+  "lon": 2.275725,
+  "capacity": 35,
+  "mechanical": 4,
+  "ebike": 5,
+  "docks": 26
+ },
+ {
+  "station_id": 43195240,
+  "name": "Silly - Galliéni",
+  "lat": 48.835583838706,
+  "lon": 2.2325500845909,
+  "capacity": 25,
+  "mechanical": 7,
+  "ebike": 5,
+  "docks": 12
+ },
+ {
+  "station_id": 506455295,
+  "name": "Général Martial Valin - Pont du Garigliano",
+  "lat": 48.83823094269141,
+  "lon": 2.270506024360657,
+  "capacity": 16,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 14
+ },
+ {
+  "station_id": 27415302,
+  "name": "Michel-Ange - Parent de Rosan",
+  "lat": 48.840579923690115,
+  "lon": 2.2584119439125065,
+  "capacity": 26,
+  "mechanical": 16,
+  "ebike": 3,
+  "docks": 7
+ },
+ {
+  "station_id": 230873471,
+  "name": "Octave Feuillet - Albéric Magnard",
+  "lat": 48.86106902949534,
+  "lon": 2.2730283066630363,
+  "capacity": 21,
+  "mechanical": 0,
+  "ebike": 1,
+  "docks": 20
+ },
+ {
+  "station_id": 27363162,
+  "name": "Ranelagh - Mozart",
+  "lat": 48.8554439,
+  "lon": 2.2704418,
+  "capacity": 23,
+  "mechanical": 1,
+  "ebike": 6,
+  "docks": 15
+ },
+ {
+  "station_id": 82562556,
+  "name": "Exelmans - Versailles",
+  "lat": 48.84097491091973,
+  "lon": 2.264390252530575,
+  "capacity": 49,
+  "mechanical": 6,
+  "ebike": 9,
+  "docks": 33
+ },
+ {
+  "station_id": 101763163,
+  "name": "Desaix - Edgar Faure",
+  "lat": 48.852804604940296,
+  "lon": 2.293077029857222,
+  "capacity": 12,
+  "mechanical": 10,
+  "ebike": 0,
+  "docks": 2
+ },
+ {
+  "station_id": 101753100,
+  "name": "Henry Farman",
+  "lat": 48.83372430280548,
+  "lon": 2.2713854536414146,
+  "capacity": 16,
+  "mechanical": 11,
+  "ebike": 2,
+  "docks": 3
+ },
+ {
+  "station_id": 535500589,
+  "name": "Hôpital Européen Georges Pompidou",
+  "lat": 48.837695319163,
+  "lon": 2.2753742337227,
+  "capacity": 78,
+  "mechanical": 53,
+  "ebike": 1,
+  "docks": 24
+ },
+ {
+  "station_id": 213688462,
+  "name": "Sablons - Georges Mandel",
+  "lat": 48.863875,
+  "lon": 2.28189,
+  "capacity": 38,
+  "mechanical": 1,
+  "ebike": 3,
+  "docks": 34
+ },
+ {
+  "station_id": 213685090,
+  "name": "Cevennes - Bergers",
+  "lat": 48.84240765130395,
+  "lon": 2.281037718057633,
+  "capacity": 29,
+  "mechanical": 25,
+  "ebike": 3,
+  "docks": 1
+ },
+ {
+  "station_id": 85147829,
+  "name": "Hôtel de Ville de Boulogne Billancourt",
+  "lat": 48.834958851668,
+  "lon": 2.2416803240776,
+  "capacity": 26,
+  "mechanical": 15,
+  "ebike": 1,
+  "docks": 10
+ },
+ {
+  "station_id": 102329800,
+  "name": "Marcelin Berthelot",
+  "lat": 48.8415473058801,
+  "lon": 2.233161628246308,
+  "capacity": 27,
+  "mechanical": 7,
+  "ebike": 1,
+  "docks": 19
+ },
+ {
+  "station_id": 129132870,
+  "name": "Nationale - Place Jules Guesde",
+  "lat": 48.82753962462998,
+  "lon": 2.2416052222251897,
+  "capacity": 23,
+  "mechanical": 17,
+  "ebike": 3,
+  "docks": 2
+ },
+ {
+  "station_id": 82550543,
+  "name": "Place de Barcelone - Mirabeau",
+  "lat": 48.847623027364,
+  "lon": 2.2735664248466,
+  "capacity": 55,
+  "mechanical": 46,
+  "ebike": 6,
+  "docks": 2
+ },
+ {
+  "station_id": 390212609,
+  "name": "Théophile Gautier - François Millet",
+  "lat": 48.85034821320644,
+  "lon": 2.273029983043671,
+  "capacity": 30,
+  "mechanical": 17,
+  "ebike": 0,
+  "docks": 13
+ },
+ {
+  "station_id": 102331767,
+  "name": "Victor Hugo - Galliéni",
+  "lat": 48.838020154411,
+  "lon": 2.2460845112801,
+  "capacity": 34,
+  "mechanical": 13,
+  "ebike": 9,
+  "docks": 10
+ },
+ {
+  "station_id": 82563707,
+  "name": "Exelmans - Michel-Ange",
+  "lat": 48.84309486651855,
+  "lon": 2.2597770800669053,
+  "capacity": 33,
+  "mechanical": 3,
+  "ebike": 3,
+  "docks": 24
+ },
+ {
+  "station_id": 102333275,
+  "name": "Saint-Vincent - Verdun",
+  "lat": 48.819211549234495,
+  "lon": 2.254007756710053,
+  "capacity": 34,
+  "mechanical": 19,
+  "ebike": 1,
+  "docks": 14
+ },
+ {
+  "station_id": 38263504,
+  "name": "Place Jacques Madaule",
+  "lat": 48.823933787309,
+  "lon": 2.2606918215752,
+  "capacity": 25,
+  "mechanical": 10,
+  "ebike": 1,
+  "docks": 14
+ },
+ {
+  "station_id": 213688824,
+  "name": "Faustin Hélie - Desbordes-Valmore",
+  "lat": 48.859403,
+  "lon": 2.276522,
+  "capacity": 33,
+  "mechanical": 0,
+  "ebike": 0,
+  "docks": 32
+ },
+ {
+  "station_id": 49807107,
+  "name": "Flandrin - Henri Martin",
+  "lat": 48.8643275,
+  "lon": 2.2724174,
+  "capacity": 18,
+  "mechanical": 1,
+  "ebike": 2,
+  "docks": 14
+ },
+ {
+  "station_id": 27363103,
+  "name": "Porte d'Auteuil",
+  "lat": 48.8479394142243,
+  "lon": 2.2608396783471107,
+  "capacity": 33,
+  "mechanical": 10,
+  "ebike": 9,
+  "docks": 14
+ },
+ {
+  "station_id": 129086648,
+  "name": "Ceinture du Lac Inferieure - Saint-Cloud",
+  "lat": 48.86218070933143,
+  "lon": 2.2617871686816216,
+  "capacity": 42,
+  "mechanical": 0,
+  "ebike": 0,
+  "docks": 42
+ },
+ {
+  "station_id": 85008390,
+  "name": "Grenelle - Dr Finlay",
+  "lat": 48.851315406715976,
+  "lon": 2.2919502854347233,
+  "capacity": 71,
+  "mechanical": 66,
+  "ebike": 2,
+  "docks": 2
+ },
+ {
+  "station_id": 129130397,
+  "name": "Pierre Grenier - Pont de Billancourt",
+  "lat": 48.8258020742942,
+  "lon": 2.2487989068031315,
+  "capacity": 21,
+  "mechanical": 2,
+  "ebike": 1,
+  "docks": 18
+ },
+ {
+  "station_id": 434419150,
+  "name": "Bara - Henri Farman",
+  "lat": 48.833218027457846,
+  "lon": 2.2677567601203923,
+  "capacity": 58,
+  "mechanical": 17,
+  "ebike": 1,
+  "docks": 40
+ },
+ {
+  "station_id": 252339799,
+  "name": "Edouard Vaillant - Paul-Adolphe Souriau",
+  "lat": 48.834845858829,
+  "lon": 2.2479459643364,
+  "capacity": 28,
+  "mechanical": 9,
+  "ebike": 1,
+  "docks": 17
+ },
+ {
+  "station_id": 63297,
+  "name": "Eglise d'Auteuil",
+  "lat": 48.84749841771691,
+  "lon": 2.26848387135299,
+  "capacity": 21,
+  "mechanical": 6,
+  "ebike": 3,
+  "docks": 12
+ },
+ {
+  "station_id": 95927849,
+  "name": "Jean Jaurès - Jean Baptiste Clément ",
+  "lat": 48.84576261454011,
+  "lon": 2.2369650006294255,
+  "capacity": 39,
+  "mechanical": 4,
+  "ebike": 11,
+  "docks": 24
+ },
+ {
+  "station_id": 27363137,
+  "name": "Hameau Fleuri - Marché",
+  "lat": 48.831448892608314,
+  "lon": 2.2412404417991643,
+  "capacity": 22,
+  "mechanical": 16,
+  "ebike": 3,
+  "docks": 3
+ },
+ {
+  "station_id": 37903195,
+  "name": "Transvaal - Charles de Gaulle ",
+  "lat": 48.848280403628806,
+  "lon": 2.2373420120857195,
+  "capacity": 27,
+  "mechanical": 4,
+  "ebike": 3,
+  "docks": 18
+ },
+ {
+  "station_id": 102336814,
+  "name": "Kléber - Gouverneur Général Eboué",
+  "lat": 48.826885843069796,
+  "lon": 2.2723413258790965,
+  "capacity": 24,
+  "mechanical": 20,
+  "ebike": 0,
+  "docks": 4
+ },
+ {
+  "station_id": 15291968,
+  "name": "Place de Passy",
+  "lat": 48.85780291711202,
+  "lon": 2.277500546942199,
+  "capacity": 15,
+  "mechanical": 0,
+  "ebike": 0,
+  "docks": 15
+ },
+ {
+  "station_id": 15387809,
+  "name": "Mozart - Jasmin",
+  "lat": 48.85286124871689,
+  "lon": 2.268483570651513,
+  "capacity": 62,
+  "mechanical": 1,
+  "ebike": 0,
+  "docks": 61
+ },
+ {
+  "station_id": 15397468,
+  "name": "Maison de Radio - France",
+  "lat": 48.85132886434057,
+  "lon": 2.277785539627075,
+  "capacity": 47,
+  "mechanical": 20,
+  "ebike": 0,
+  "docks": 25
+ },
+ {
+  "station_id": 52329,
+  "name": "Chernoviz - Raynouard",
+  "lat": 48.8569864146289,
+  "lon": 2.282173218142987,
+  "capacity": 37,
+  "mechanical": 1,
+  "ebike": 5,
+  "docks": 31
+ },
+ {
+  "station_id": 54000545,
+  "name": "Parc André Citroën",
+  "lat": 48.840639944297,
+  "lon": 2.2780618071556,
+  "capacity": 65,
+  "mechanical": 54,
+  "ebike": 0,
+  "docks": 9
+ },
+ {
+  "station_id": 1021176825,
+  "name": "Billancourt - Général Leclerc ",
+  "lat": 48.8322649,
+  "lon": 2.2380413,
+  "capacity": 22,
+  "mechanical": 7,
+  "ebike": 2,
+  "docks": 13
+ },
+ {
+  "station_id": 54000607,
+  "name": "Convention - Saint-Charles",
+  "lat": 48.843156111116,
+  "lon": 2.2831090539694,
+  "capacity": 23,
+  "mechanical": 18,
+  "ebike": 5,
+  "docks": 0
+ },
+ {
+  "station_id": 37952191,
+  "name": "Jean Jaurès - Reine",
+  "lat": 48.84009622558849,
+  "lon": 2.239872515201569,
+  "capacity": 31,
+  "mechanical": 10,
+  "ebike": 12,
+  "docks": 9
+ },
+ {
+  "station_id": 15401095,
+  "name": "Versailles - Claude Terrasse",
+  "lat": 48.840219338074,
+  "lon": 2.263834191153,
+  "capacity": 46,
+  "mechanical": 4,
+  "ebike": 4,
+  "docks": 37
+ },
+ {
+  "station_id": 1055541632,
+  "name": "Place Tony de Graaff",
+  "lat": 48.8181645,
+  "lon": 2.2458109,
+  "capacity": 42,
+  "mechanical": 1,
+  "ebike": 2,
+  "docks": 38
+ },
+ {
+  "station_id": 85152599,
+  "name": "Le Corbusier - Jean Jaurès",
+  "lat": 48.83780830557548,
+  "lon": 2.2408381104469304,
+  "capacity": 46,
+  "mechanical": 33,
+  "ebike": 10,
+  "docks": 2
+ },
+ {
+  "station_id": 82590367,
+  "name": "Place Marcel Sembat",
+  "lat": 48.833288650307,
+  "lon": 2.2441747784615,
+  "capacity": 56,
+  "mechanical": 42,
+  "ebike": 5,
+  "docks": 6
+ },
+ {
+  "station_id": 1057081237,
+  "name": "Cimetière d'Issy-les-Moulineaux",
+  "lat": 48.817699773925,
+  "lon": 2.2609312087297,
+  "capacity": 24,
+  "mechanical": 0,
+  "ebike": 4,
+  "docks": 20
+ },
+ {
+  "station_id": 653125838,
+  "name": "Cours de l'Ile Seguin - Parc Billancourt",
+  "lat": 48.82714055843935,
+  "lon": 2.234234511852265,
+  "capacity": 29,
+  "mechanical": 11,
+  "ebike": 2,
+  "docks": 13
+ },
+ {
+  "station_id": 129135654,
+  "name": "Victor Cresson - Telles de la Poterie",
+  "lat": 48.822698842979,
+  "lon": 2.2686498274964,
+  "capacity": 31,
+  "mechanical": 6,
+  "ebike": 4,
+  "docks": 20
+ },
+ {
+  "station_id": 213689228,
+  "name": "Raffet - Montmorency",
+  "lat": 48.85258670812,
+  "lon": 2.2629252456151954,
+  "capacity": 42,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 40
+ },
+ {
+  "station_id": 1057039016,
+  "name": "Fessart - Château",
+  "lat": 48.84245,
+  "lon": 2.23989,
+  "capacity": 20,
+  "mechanical": 5,
+  "ebike": 4,
+  "docks": 11
+ },
+ {
+  "station_id": 1057045129,
+  "name": "Cimetière de Boulogne-Billancourt",
+  "lat": 48.830764,
+  "lon": 2.252024,
+  "capacity": 40,
+  "mechanical": 21,
+  "ebike": 1,
+  "docks": 18
+ },
+ {
+  "station_id": 1190800638,
+  "name": "Ranelagh - Maison de la Radio",
+  "lat": 48.85293603169479,
+  "lon": 2.280449643731117,
+  "capacity": 22,
+  "mechanical": 1,
+  "ebike": 7,
+  "docks": 12
+ },
+ {
+  "station_id": 19016646124,
+  "name": "Vaugirard - Verrerie",
+  "lat": 48.820881336842,
+  "lon": 2.2367222622987,
+  "capacity": 26,
+  "mechanical": 16,
+  "ebike": 1,
+  "docks": 9
+ },
+ {
+  "station_id": 653123610,
+  "name": "Pierre Lefaucheux - Traversière",
+  "lat": 48.82435208303827,
+  "lon": 2.2417913004755974,
+  "capacity": 35,
+  "mechanical": 22,
+  "ebike": 0,
+  "docks": 13
+ },
+ {
+  "station_id": 404947652,
+  "name": "Place Fernand Forest",
+  "lat": 48.849269143836,
+  "lon": 2.281863167882,
+  "capacity": 33,
+  "mechanical": 30,
+  "ebike": 3,
+  "docks": 0
+ },
+ {
+  "station_id": 213686749,
+  "name": "Place de la Porte de Passy",
+  "lat": 48.857341095470794,
+  "lon": 2.2644165538827115,
+  "capacity": 36,
+  "mechanical": 0,
+  "ebike": 6,
+  "docks": 30
+ },
+ {
+  "station_id": 389788858,
+  "name": "Emeriau - Beaugrenelle",
+  "lat": 48.84791249714942,
+  "lon": 2.2843059897422795,
+  "capacity": 74,
+  "mechanical": 61,
+  "ebike": 4,
+  "docks": 2
+ },
+ {
+  "station_id": 38327,
+  "name": "Victor Hugo - La Pompe",
+  "lat": 48.86795222470859,
+  "lon": 2.28146318346262,
+  "capacity": 41,
+  "mechanical": 3,
+  "ebike": 7,
+  "docks": 31
+ },
+ {
+  "station_id": 27415246,
+  "name": "Javel - André Citroën",
+  "lat": 48.846276485475,
+  "lon": 2.2786368057132,
+  "capacity": 45,
+  "mechanical": 43,
+  "ebike": 1,
+  "docks": 0
+ },
+ {
+  "station_id": 653083263,
+  "name": "Lucien Bossoutrot - Général Martial Vallin",
+  "lat": 48.836956046311,
+  "lon": 2.2741072252393,
+  "capacity": 39,
+  "mechanical": 12,
+  "ebike": 1,
+  "docks": 26
+ },
+ {
+  "station_id": 82584215,
+  "name": "Place Lafayette",
+  "lat": 48.829654975522,
+  "lon": 2.2638675570488,
+  "capacity": 62,
+  "mechanical": 31,
+  "ebike": 2,
+  "docks": 28
+ },
+ {
+  "station_id": 559595472,
+  "name": "Suffren - Champ de Mars",
+  "lat": 48.8547194,
+  "lon": 2.2952168,
+  "capacity": 23,
+  "mechanical": 12,
+  "ebike": 4,
+  "docks": 5
+ },
+ {
+  "station_id": 1057335613,
+  "name": "Quai du Président Roosevelt - Pont Aval",
+  "lat": 48.834388367639,
+  "lon": 2.2656820714474,
+  "capacity": 30,
+  "mechanical": 13,
+  "ebike": 0,
+  "docks": 17
+ },
+ {
+  "station_id": 1057354004,
+  "name": "Chemin de Bretagne",
+  "lat": 48.824753068884,
+  "lon": 2.2588385956052,
+  "capacity": 29,
+  "mechanical": 10,
+  "ebike": 5,
+  "docks": 13
+ },
+ {
+  "station_id": 1057091571,
+  "name": "Esplanade du Foncet - Camille Desmoulins",
+  "lat": 48.827090233495,
+  "lon": 2.2606857866049,
+  "capacity": 28,
+  "mechanical": 21,
+  "ebike": 5,
+  "docks": 2
+ },
+ {
+  "station_id": 37504995,
+  "name": "Jean Monnet - Iles",
+  "lat": 48.823393984057304,
+  "lon": 2.2497073194874866,
+  "capacity": 32,
+  "mechanical": 6,
+  "ebike": 0,
+  "docks": 25
+ },
+ {
+  "station_id": 1057753858,
+  "name": "Place Charles Michels",
+  "lat": 48.846401,
+  "lon": 2.28502,
+  "capacity": 37,
+  "mechanical": 33,
+  "ebike": 1,
+  "docks": 1
+ },
+ {
+  "station_id": 54000592,
+  "name": "Balard - Montagne de la Fage",
+  "lat": 48.838507403334,
+  "lon": 2.2782871127129,
+  "capacity": 36,
+  "mechanical": 13,
+  "ebike": 1,
+  "docks": 22
+ },
+ {
+  "station_id": 82339935,
+  "name": "Porte de la Muette",
+  "lat": 48.86302317841182,
+  "lon": 2.2687188170157406,
+  "capacity": 36,
+  "mechanical": 0,
+  "ebike": 0,
+  "docks": 36
+ },
+ {
+  "station_id": 38407,
+  "name": "Flandrin - Longchamp",
+  "lat": 48.86877849178477,
+  "lon": 2.274354539176829,
+  "capacity": 42,
+  "mechanical": 6,
+  "ebike": 6,
+  "docks": 28
+ },
+ {
+  "station_id": 201923447,
+  "name": "Murat - Porte de Saint-Cloud",
+  "lat": 48.837508626213,
+  "lon": 2.2577651962638,
+  "capacity": 38,
+  "mechanical": 22,
+  "ebike": 13,
+  "docks": 3
+ },
+ {
+  "station_id": 82554449,
+  "name": "Porte Molitor",
+  "lat": 48.845247635114,
+  "lon": 2.256901524961,
+  "capacity": 60,
+  "mechanical": 4,
+  "ebike": 10,
+  "docks": 46
+ },
+ {
+  "station_id": 129081441,
+  "name": "Vignes - Boulainvilliers",
+  "lat": 48.856399483950504,
+  "lon": 2.275240458548069,
+  "capacity": 21,
+  "mechanical": 0,
+  "ebike": 3,
+  "docks": 17
+ },
+ {
+  "station_id": 82574198,
+  "name": "Mairie d'Issy",
+  "lat": 48.823767792468,
+  "lon": 2.2723111510277,
+  "capacity": 41,
+  "mechanical": 28,
+  "ebike": 7,
+  "docks": 5
+ },
+ {
+  "station_id": 35600927,
+  "name": "Mairie du 16ème",
+  "lat": 48.863936848471994,
+  "lon": 2.2765953093767166,
+  "capacity": 35,
+  "mechanical": 0,
+  "ebike": 3,
+  "docks": 31
+ },
+ {
+  "station_id": 1062982815,
+  "name": "Gare de Bellevue",
+  "lat": 48.8192404685572,
+  "lon": 2.2295309230685234,
+  "capacity": 20,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 18
+ },
+ {
+  "station_id": 1805255023,
+  "name": "Sèvres - Général Leclerc",
+  "lat": 48.830121559055,
+  "lon": 2.2314262390137,
+  "capacity": 30,
+  "mechanical": 1,
+  "ebike": 2,
+  "docks": 26
+ },
+ {
+  "station_id": 19495456684,
+  "name": "Commandant Schloesing - Pétrarque",
+  "lat": 48.861773096259,
+  "lon": 2.2838841134601,
+  "capacity": 30,
+  "mechanical": 1,
+  "ebike": 0,
+  "docks": 29
+ },
+ {
+  "station_id": 17486828694,
+  "name": "Charlot - Stade Gabriel Voisin",
+  "lat": 48.827228120536,
+  "lon": 2.268122527474,
+  "capacity": 31,
+  "mechanical": 28,
+  "ebike": 3,
+  "docks": 0
+ },
+ {
+  "station_id": 2705290225,
+  "name": "Suresnes - Muette à Neuilly",
+  "lat": 48.868570404348,
+  "lon": 2.266000919044,
+  "capacity": 30,
+  "mechanical": 2,
+  "ebike": 0,
+  "docks": 28
+ },
+ {
+  "station_id": 129080400,
+  "name": "Belles Feuilles - Place de Mexico",
+  "lat": 48.865804746474,
+  "lon": 2.2829206287861,
+  "capacity": 23,
+  "mechanical": 0,
+  "ebike": 4,
+  "docks": 19
+ },
+ {
+  "station_id": 653159330,
+  "name": "Quai de Sèvres - Manufacture Nationale",
+  "lat": 48.828688,
+  "lon": 2.22499,
+  "capacity": 28,
+  "mechanical": 13,
+  "ebike": 3,
+  "docks": 11
+ },
+ {
+  "station_id": 653110858,
+  "name": "Silly - Louis Blériot",
+  "lat": 48.83219045374266,
+  "lon": 2.2340199351310734,
+  "capacity": 23,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 21
+ },
+ {
+  "station_id": 16529895896,
+  "name": "Gare - Aristide Briand",
+  "lat": 48.821410564722,
+  "lon": 2.2555950104387,
+  "capacity": 29,
+  "mechanical": 22,
+  "ebike": 4,
+  "docks": 2
+ },
+ {
+  "station_id": 102328355,
+  "name": "Place Denfert-Rochereau",
+  "lat": 48.843252536286684,
+  "lon": 2.245987951755524,
+  "capacity": 20,
+  "mechanical": 0,
+  "ebike": 2,
+  "docks": 17
+ },
+ {
+  "station_id": 39599631,
+  "name": "François Ponsard - La Muette",
+  "lat": 48.8583666,
+  "lon": 2.2744515,
+  "capacity": 23,
+  "mechanical": 0,
+  "ebike": 1,
+  "docks": 22
+ },
+ {
+  "station_id": 653114003,
+  "name": "Dôme - République",
+  "lat": 48.832681,
+  "lon": 2.250257,
+  "capacity": 25,
+  "mechanical": 13,
+  "ebike": 5,
+  "docks": 6
+ },
+ {
+  "station_id": 54000610,
+  "name": "Jean de la Fontaine - Boulainvilliers",
+  "lat": 48.85264791461651,
+  "lon": 2.2758664190769196,
+  "capacity": 68,
+  "mechanical": 21,
+  "ebike": 0,
+  "docks": 44
+ },
+ {
+  "station_id": 63279,
+  "name": "Siam - La Pompe",
+  "lat": 48.861720329027264,
+  "lon": 2.275346568555312,
+  "capacity": 16,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 13
+ },
+ {
+  "station_id": 15163771,
+  "name": "George Sand - Jean de La Fontaine",
+  "lat": 48.84986918764119,
+  "lon": 2.268257387525699,
+  "capacity": 29,
+  "mechanical": 5,
+  "ebike": 1,
+  "docks": 22
+ },
+ {
+  "station_id": 653118283,
+  "name": "Ancienne Mairie - André Morizet",
+  "lat": 48.838311,
+  "lon": 2.234077,
+  "capacity": 25,
+  "mechanical": 0,
+  "ebike": 0,
+  "docks": 24
+ },
+ {
+  "station_id": 82551956,
+  "name": "Marché d'Auteuil",
+  "lat": 48.84842761367387,
+  "lon": 2.265253821160005,
+  "capacity": 32,
+  "mechanical": 5,
+  "ebike": 5,
+  "docks": 22
+ },
+ {
+  "station_id": 35816213,
+  "name": "Passy - Place du Costa Rica",
+  "lat": 48.8584893,
+  "lon": 2.2839655,
+  "capacity": 33,
+  "mechanical": 1,
+  "ebike": 2,
+  "docks": 30
+ },
+ {
+  "station_id": 653121023,
+  "name": "Fief - République",
+  "lat": 48.83170888166024,
+  "lon": 2.255771979689598,
+  "capacity": 25,
+  "mechanical": 6,
+  "ebike": 1,
+  "docks": 16
+ },
+ {
+  "station_id": 27363397,
+  "name": "Jean Bologne - Passy",
+  "lat": 48.857566889784465,
+  "lon": 2.280027395306772,
+  "capacity": 19,
+  "mechanical": 1,
+  "ebike": 1,
+  "docks": 17
+ },
+ {
+  "station_id": 27415500,
+  "name": "Point du Jour - Jean Jaurès",
+  "lat": 48.828753141436465,
+  "lon": 2.245911467014621,
+  "capacity": 40,
+  "mechanical": 9,
+  "ebike": 5,
+  "docks": 25
+ },
+ {
+  "station_id": 11063317380,
+  "name": "Sèvres - Maréchal Juin",
+  "lat": 48.8324305,
+  "lon": 2.2292812,
+  "capacity": 18,
+  "mechanical": 14,
+  "ebike": 0,
+  "docks": 4
+ },
+ {
+  "station_id": 16379269732,
+  "name": "Président Roosevelt - Rouget de Lisle",
+  "lat": 48.83047518749,
+  "lon": 2.2616135525345,
+  "capacity": 40,
+  "mechanical": 18,
+  "ebike": 2,
+  "docks": 19
+ },
+ {
+  "station_id": 17451195211,
+  "name": "Jean Bouin - Gouverneur Général Eboué",
+  "lat": 48.824792734266,
+  "lon": 2.2651904328524,
+  "capacity": 31,
+  "mechanical": 28,
+  "ebike": 3,
+  "docks": 0
+ },
+ {
+  "station_id": 128915891,
+  "name": "Octave Gréard - Tour Eiffel",
+  "lat": 48.856502977696,
+  "lon": 2.2931787543289,
+  "capacity": 33,
+  "mechanical": 16,
+  "ebike": 2,
+  "docks": 13
+ },
+ {
+  "station_id": 30641281,
+  "name": "Place de la Montagne du Goulet",
+  "lat": 48.8443415,
+  "lon": 2.2773844,
+  "capacity": 21,
+  "mechanical": 18,
+  "ebike": 2,
+  "docks": 1
+ },
+ {
+  "station_id": 21372728303,
+  "name": "Place Daydé - Ile Seguin",
+  "lat": 48.822959442715,
+  "lon": 2.2362314489433,
+  "capacity": 31,
+  "mechanical": 3,
+  "ebike": 0,
+  "docks": 26
+ },
+ {
+  "station_id": 129083553,
+  "name": "Porte de Saint Cloud - Parc des Princes",
+  "lat": 48.838662757066,
+  "lon": 2.2525164484978,
+  "capacity": 32,
+  "mechanical": 14,
+  "ebike": 17,
+  "docks": 0
+ },
+ {
+  "station_id": 213683992,
+  "name": "Cauchy - Cévennes",
+  "lat": 48.843372571022,
+  "lon": 2.2751328349113,
+  "capacity": 51,
+  "mechanical": 29,
+  "ebike": 8,
+  "docks": 14
+ },
+ {
+  "station_id": 27415224,
+  "name": "Bir Hakeim",
+  "lat": 48.853844054334,
+  "lon": 2.289705348222,
+  "capacity": 33,
+  "mechanical": 12,
+  "ebike": 2,
+  "docks": 18
+ },
+ {
+  "station_id": 102335085,
+  "name": "Aristide Briand - Place de la Résistance",
+  "lat": 48.82124248401006,
+  "lon": 2.2511002421379094,
+  "capacity": 25,
+  "mechanical": 25,
+  "ebike": 3,
+  "docks": 2
+ },
+ {
+  "station_id": 20235746379,
+  "name": "Square Bela Bartok",
+  "lat": 48.850984480382,
+  "lon": 2.2844360220351,
+  "capacity": 24,
+  "mechanical": 20,
+  "ebike": 1,
+  "docks": 3
+ },
+ {
+  "station_id": 101761298,
+  "name": "Place du Moulin de Javel",
+  "lat": 48.84021670922,
+  "lon": 2.2716060653329,
+  "capacity": 45,
+  "mechanical": 11,
+  "ebike": 3,
+  "docks": 31
+ },
+ {
+  "station_id": 117480156,
+  "name": "Enfants du Paradis - Peupliers",
+  "lat": 48.833122686454,
+  "lon": 2.2571459412575,
+  "capacity": 40,
+  "mechanical": 11,
+  "ebike": 3,
+  "docks": 27
+ }
+]
