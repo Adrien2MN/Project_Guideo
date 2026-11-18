@@ -1,0 +1,71 @@
+# Connaissances générales : valables pour tout le monde, versionnées avec le code.
+#
+# Elles ne servent que de VALEURS DE DÉPART quand la mémoire personnelle ne sait encore rien.
+# Dès qu'une habitude personnelle existe (au moins une observation), elle passe devant.
+# Rien de personnel ici : ni lieu, ni personne, ni horaire propre à l'utilisateur.
+#
+# Ordre de priorité pour l'heure de début : heure dite > habitude personnelle >
+# heure de l'activité pour la plage dite > heure de l'activité > heure type de la plage > question.
+
+# Moments de la journée : bornes (pour filtrer des séances) et heure type quand rien d'autre n'est connu.
+[plages.matin]
+de = "06:00"
+a = "12:00"
+heure_type = "09:00"
+
+[plages.midi]
+de = "11:30"
+a = "14:30"
+heure_type = "12:30"
+
+[plages.apres-midi]
+de = "12:00"
+a = "18:00"
+heure_type = "14:00"
+
+[plages.soir]
+de = "18:00"
+a = "23:59"
+heure_type = "19:00"
+
+[plages.nuit]
+de = "21:00"
+a = "23:59"
+heure_type = "22:00"
+
+# Activités : durée typique, et éventuellement heures typiques.
+#   duree_min       durée par défaut en minutes
+#   debut / fin     horaires typiques quand aucune plage n'est dite (ex. une soirée)
+#   [x.heures]      heure de début typique selon la plage dite (ex. repas du midi / du soir)
+# Une activité sans heure typique déclenche une question ("À quelle heure ?").
+[activites.escalade]
+duree_min = 120
+
+[activites.soiree]
+debut = "20:00"
+fin = "00:00"
+
+[activites.repas]
+duree_min = 120
+[activites.repas.heures]
+midi = "12:00"
+soir = "20:00"
+
+[activites.visite]
+duree_min = 60
+
+[activites.sport]
+duree_min = 90
+
+[activites.cinema]
+duree_min = 120      # durée du film, utilisée seulement si Allociné ne la donne pas
+
+[activites.spectacle]
+duree_min = 120
+
+[activites.rendez-vous]
+duree_min = 60
+
+[activites.travail]
+
+[activites.autre]

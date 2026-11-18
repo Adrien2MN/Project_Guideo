@@ -21,12 +21,16 @@ analysis = ["polars>=1.0", "pyarrow>=15"]
 streets = ["osmnx>=2.0"]
 traces = ["fitdecode>=0.10", "pandas>=2.0", "shapely>=2.0", "folium>=0.15"]
 dev-traces = ["fit-tool>=0.9"]
+interpreteur = ["ollama>=0.4", "pydantic>=2.7", "rapidfuzz>=3.0", "allocine-seances>=0.0.14"]
 
 [project.scripts]
 guideo-velib-collector = "guideo.velib.collector:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+guideo = ["memoire/*.toml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
