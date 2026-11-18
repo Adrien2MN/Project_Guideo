@@ -1,663 +1,372 @@
-"""Test de l'interpréteur Guideo : phrase -> événement, avec Ollama en local.
+"""Interpréteur Guideo en console : phrase -> événement, avec une mémoire qui apprend.
 
-Principe :
-- le LLM COMPREND la phrase (activité, lieu, film, date, heure...) ;
-- le CODE RÉSOUT : mémoire perso pour l'escalade ou les soirées, vraies séances
-  pour le cinéma, et pose les questions quand plusieurs réponses sont vraies.
-
-Prérequis (dans le venv du projet) :
-    pip install ollama pydantic rapidfuzz "allocine-seances>=0.0.14"
+Prérequis (dans le venv du projet, depuis la racine) :
+    pip install -e ".[interpreteur]"
+Ollama doit tourner, avec le modèle téléchargé.
 
 Utilisation :
-    python scripts/test_interpreteur.py                 # phrases de test, vraies séances Allociné
-    python scripts/test_interpreteur.py --faux          # séances factices (test de la logique, sans réseau)
-    python scripts/test_interpreteur.py -p "je vais voir Moulin ce soir à Montparnasse"
+    python scripts/test_interpreteur.py --discuter          # dialogue : la mémoire se remplit au fil des réponses
+    python scripts/test_interpreteur.py -p "je grimpe ce soir"   # une phrase, mémoire en lecture seule
+Options :
+    --faux                 séances de cinéma factices (sans Allociné)
+    --memoire CHEMIN       autre fichier mémoire (défaut : data/memoire/memoire.json)
+    --modele NOM           autre modèle Ollama
+
+Tout ce que Guideo apprend est dans data/memoire/memoire.json (lisible, modifiable),
+et chaque modification est tracée dans data/memoire/journal.jsonl.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
-import math
-import re
-import time
-import unicodedata
-import urllib.parse
-import urllib.request
-from dataclasses import dataclass
-from datetime import date, datetime, timedelta
-from enum import Enum
+import sys
+from datetime import date, datetime
 from pathlib import Path
-from typing import Callable, Literal, Optional
+from typing import Optional
 
-import ollama
-from pydantic import BaseModel, Field, field_validator
-from rapidfuzz import fuzz
+try:
+    import guideo  # noqa: F401
+except ImportError:  # projet pas installé avec pip install -e : on ajoute src/ au chemin
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-MODELE = "ministral-3:8b-instruct-2512-q4_K_M"
+from guideo.config import load_settings
+from guideo.interpreteur import Analyse, Manque, analyser, appliquer_horaire, completer, expliquer
+from guideo.interpreteur import cinema as cine
+from guideo.interpreteur import geo
+from guideo.interpreteur.comprendre import MODELE, comprendre
+from guideo.interpreteur.texte import date_dite
+from guideo.memoire import Memoire, charger_connaissances, normaliser
+from guideo.memoire.memoire import JOURS
 
-RAYONS_KM = (1.2, 2.5)    # rayon de recherche autour de la zone, élargi si rien de proche
-TOLERANCE_HEURE_MIN = 10  # "22h" accepte les séances de 21h50 à 22h10
-PUBS_MIN = 15             # publicités et bandes-annonces avant le film
-SEUIL_TITRE = 75         # score minimal de correspondance du titre (0-100)
-PLAGES = {                # plages horaires pour "ce matin", "ce soir"...
-    "matin": ("06:00", "12:00"),
-    "midi": ("11:30", "14:30"),
-    "apres-midi": ("12:00", "18:00"),
-    "soir": ("18:00", "23:59"),
-    "nuit": ("21:00", "23:59"),
-}
+DATA = load_settings().data_dir
+JOURNAL_GEO = DATA / "geocodage_journal.jsonl"
+NOMS_ACTIVITES = {"soiree": "Soirée", "rendez-vous": "Rendez-vous", "cinema": "Cinéma"}
 
-# --- Mémoire personnelle (écrite à la main pour l'instant) --------------------
-MEMOIRE = {
-    # Coordonnées approximatives de l'avenue Henri-Martin : mets ton adresse exacte.
-    "domicile": {"id": "domicile", "nom": "Domicile (rue Henri Martin)", "lat": 48.8640, "lon": 2.2760},
-    "lieux": [
-        {
-            "id": "arkose_pont_de_sevres",
-            "nom": "Arkose Pont de Sèvres",
-            "categorie": "escalade",
-            "alias": ["Pont de Sèvres", "Arkose", "la salle", "la salle d'escalade"],
-            "note": "abonnement Arkose ; salle d'escalade habituelle",
-        },
-    ],
-    "contacts": [
-        {"id": "contact_nico", "nom": "Nico", "quartier": "Montparnasse", "adresse_connue": True},
-    ],
-    "habitudes": {
-        "escalade": {"duree_min": 120, "debut_soir": "19:00"},
-        "soiree": {"debut": "20:00", "fin": "00:00"},
-        "definitions": {"matin": "09:00", "midi": "12:30", "apres-midi": "14:00", "soir": "19:00"},
-    },
-}
 
-ENTREES_MEMOIRE = {MEMOIRE["domicile"]["id"]: MEMOIRE["domicile"]["nom"]}
-ENTREES_MEMOIRE |= {l["id"]: l["nom"] for l in MEMOIRE["lieux"]}
-ENTREES_MEMOIRE |= {c["id"]: f"Chez {c['nom']} ({c['quartier']})" for c in MEMOIRE["contacts"]}
-LieuId = Enum("LieuId", {i: i for i in ENTREES_MEMOIRE}, type=str)
+# ============================================================================ saisie console
+def texte(question: str) -> str:
+    return input(f"   {question} > ").strip()
 
-FORMAT_DATETIME = r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}"
-FORMAT_DATE = r"^\d{4}-\d{2}-\d{2}$"
-FORMAT_HEURE = r"^\d{2}:\d{2}$"
 
+def oui(question: str, defaut: bool = True) -> bool:
+    rep = texte(f"{question} [{'O/n' if defaut else 'o/N'}]").lower()
+    return defaut if not rep else rep.startswith("o")
 
-# =============================================================================
-# 1. Ce que le LLM remplit : la compréhension de la phrase
-# =============================================================================
-class SortieModele(BaseModel):
-    raisonnement: str = Field(description="Une ou deux phrases : comment tu as compris la demande")
-    activite: Literal["escalade", "soiree", "repas", "sport", "cinema", "spectacle", "travail", "rendez-vous", "autre"]
-    titre: str = Field(description="Titre court pour l'agenda")
-    lieu_id: Optional[LieuId] = Field(description="id d'un lieu ou d'un contact de la mémoire, ou null si aucun ne correspond")
-    zone: Optional[str] = Field(description="Quartier, ville ou lieu prononcé par l'utilisateur (ex. 'Montparnasse'), ou null")
-    film: Optional[str] = Field(description="Titre du film tel que prononcé, sans le corriger, ou null")
-    date: Optional[str] = Field(pattern=FORMAT_DATE, description="Jour de l'activité, AAAA-MM-JJ, ou null si inconnu")
-    heure_dite: Optional[str] = Field(description="L'heure précise prononcée, mot pour mot (ex. '22h'), ou null. 'soir' n'est PAS une heure précise.")
-    heure: Optional[str] = Field(pattern=FORMAT_HEURE, description="heure_dite convertie en HH:MM, ou null")
-    plage: Optional[Literal["matin", "midi", "apres-midi", "soir", "nuit"]] = Field(description="Moment de la journée dit sans heure précise ('ce soir' -> soir), ou null")
-    debut: Optional[str] = Field(pattern=FORMAT_DATETIME, description="Début proposé AAAA-MM-JJTHH:MM, ou null (toujours null pour le cinéma)")
-    fin: Optional[str] = Field(pattern=FORMAT_DATETIME, description="Fin proposée AAAA-MM-JJTHH:MM, ou null (toujours null pour le cinéma)")
-    question: Optional[str] = Field(description="UNE seule question courte si une information essentielle manque, sinon null")
 
-    @field_validator("question", "zone", "film", "heure_dite", "heure", "date", "debut", "fin", mode="before")
-    @classmethod
-    def vide_vers_null(cls, v):
-        return None if isinstance(v, str) and not v.strip() else v
-
-
-# =============================================================================
-# 2. Ce que le programme produit : l'événement final
-# =============================================================================
-class Evenement(BaseModel):
-    activite: str
-    titre: str
-    lieu_id: Optional[str] = None
-    lieu_nom: Optional[str] = None
-    adresse: Optional[str] = None
-    lat: Optional[float] = None
-    lon: Optional[float] = None
-    debut: Optional[str] = None
-    fin: Optional[str] = None
-    horaire_flexible: bool
-    confiance: float
-    question: Optional[str] = None
-    raisonnement: Optional[str] = None
-
-
-# =============================================================================
-# 3. Le LLM
-# =============================================================================
-JOURS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"]
-
-
-def prompt_systeme(maintenant: datetime) -> str:
-    return f"""Tu es l'interpréteur d'agenda de l'application Guideo.
-L'utilisateur décrit oralement une activité. Tu dois comprendre précisément sa demande.
-
-Maintenant : {JOURS[maintenant.weekday()]} {maintenant:%Y-%m-%d %H:%M} (Europe/Paris).
-
-Mémoire de l'utilisateur (JSON) :
-{json.dumps(MEMOIRE, ensure_ascii=False, indent=2)}
-
-Règles générales :
-- Associe les mots de l'utilisateur aux lieux, alias et contacts de la mémoire (ex. "chez X" -> le contact X).
-- Calcule les dates exactes à partir de "maintenant" (ce soir, demain, samedi...).
-- Pour les activités de la mémoire, utilise les habitudes pour proposer debut et fin.
-- Si une soirée finit à minuit, la fin est le lendemain à 00:00.
-- Ne mets jamais de texte libre dans lieu_id, date, heure, debut ou fin : une valeur valide ou null.
-
-Règles pour le cinéma (activite = "cinema") :
-- Remplis film (le titre tel que dit, sans le corriger), zone, date, et heure ou plage.
-- lieu_id, debut et fin sont TOUJOURS null : ils seront trouvés dans les vraies séances.
-- Ne pose pas de question sur le cinéma ou la séance : le programme s'en charge.
-
-Ne pose une question que si une information essentielle manque, et une seule.
-Réponds uniquement avec le JSON demandé."""
-
-
-def comprendre(phrase: str, maintenant: datetime) -> SortieModele:
-    reponse = ollama.chat(
-        model=MODELE,
-        messages=[
-            {"role": "system", "content": prompt_systeme(maintenant)},
-            {"role": "user", "content": phrase},
-        ],
-        format=SortieModele.model_json_schema(),  # sortie forcée au schéma
-        options={"temperature": 0},
-    )
-    return SortieModele.model_validate_json(reponse.message.content)
-
-
-# =============================================================================
-# 4. Sources de données cinéma
-# =============================================================================
-@dataclass
-class Cinema:
-    id: str
-    nom: str
-    adresse: str
-    lat: Optional[float]
-    lon: Optional[float]
-
-
-@dataclass
-class Seance:
-    cinema: Cinema
-    film: str
-    duree_min: Optional[int]
-    version: str
-    debut: datetime
-
-
-def distance_km(lat1, lon1, lat2, lon2) -> float:
-    r = 6371.0
-    p1, p2 = math.radians(lat1), math.radians(lat2)
-    dp, dl = p2 - p1, math.radians(lon2 - lon1)
-    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
-    return 2 * r * math.asin(math.sqrt(a))
-
-
-def geocoder_ign(texte: str, afficher: bool = False) -> Optional[tuple[float, float]]:
-    """Géocodage IGN (Géoplateforme), sans clé. Renvoie (lat, lon) ou None."""
-    params = urllib.parse.urlencode({"q": texte, "limit": 1, "lat": 48.8566, "lon": 2.3522})
-    try:
-        with urllib.request.urlopen(f"https://data.geopf.fr/geocodage/search?{params}", timeout=10) as r:
-            donnees = json.load(r)
-    except Exception as e:
-        print(f"   [géocodage impossible pour {texte!r} : {e}]")
-        return None
-    feats = donnees.get("features") or []
-    if not feats:
-        return None
-    lon, lat = feats[0]["geometry"]["coordinates"]
-    if afficher:
-        print(f"   [{texte!r} -> {feats[0]['properties'].get('label', '?')} ({lat:.4f}, {lon:.4f})]")
-    return lat, lon
-
-
-# --- Choix du bon lieu parmi les homonymes -------------------------------------
-DISTANCE_MAX_KM = 40   # au-delà, un résultat est jugé improbable (sauf s'il n'y a rien de plus proche)
-JOURNAL_GEOCODAGE = Path("data/geocodage_journal.jsonl")
-
-
-def candidats_ign(texte: str, limite: int = 10) -> list[dict]:
-    """Interroge l'IGN sur les adresses ET les points d'intérêt (quartiers, gares...)."""
-    resultats = []
-    for index in ("address", "poi"):
-        params = urllib.parse.urlencode({"q": texte, "limit": limite, "index": index})
-        try:
-            with urllib.request.urlopen(f"https://data.geopf.fr/geocodage/search?{params}", timeout=10) as r:
-                donnees = json.load(r)
-        except Exception as e:
-            print(f"   [géocodage IGN ({index}) impossible pour {texte!r} : {e}]")
-            continue
-        for f in donnees.get("features") or []:
-            pr = f.get("properties", {})
-            lon, lat = f["geometry"]["coordinates"][:2]
-            nom = pr.get("label") or pr.get("name") or pr.get("toponym") or "?"
-            if isinstance(nom, list):
-                nom = nom[0]
-            ville = pr.get("city") or pr.get("municipality") or ""
-            if isinstance(ville, list):
-                ville = ville[0] if ville else ""
-            resultats.append({"nom": nom, "ville": ville, "lat": lat, "lon": lon, "index": index,
-                              "score": float(pr.get("score") or pr.get("_score") or 0.5)})
-    return resultats
-
-
-def choisir_lieu(texte: str, candidats: list[dict], reference: tuple[float, float]) -> Optional[dict]:
-    """Le plus probable = un bon score IGN ET proche de chez toi.
-
-    Règle : on écarte ce qui est à plus de DISTANCE_MAX_KM de la référence (s'il reste quelque chose),
-    puis on prend le meilleur score IGN, en départageant par la distance.
-    """
-    if not candidats:
-        return None
-    for c in candidats:
-        c["km"] = distance_km(*reference, c["lat"], c["lon"])
-    proches = [c for c in candidats if c["km"] <= DISTANCE_MAX_KM]
-    if not proches:
-        print(f"   [aucun {texte!r} à moins de {DISTANCE_MAX_KM} km de chez toi : résultat lointain]")
-    choisi = max(proches or candidats, key=lambda c: (round(c["score"], 1), -c["km"]))
-
-    classement = sorted(candidats, key=lambda c: c["km"])[:5]
-    print(f"   [{texte!r} : {len(candidats)} résultats ; les plus proches : "
-          + "; ".join(f"{c['nom']} ({c['km']:.0f} km, score {c['score']:.2f})" for c in classement) + "]")
-    print(f"   [choisi : {choisi['nom']} ({choisi['lat']:.4f}, {choisi['lon']:.4f}), {choisi['km']:.1f} km de chez toi]")
-
-    # Journal : chaque choix est gardé. Avec tes corrections, ce sera la base d'apprentissage du classement.
-    try:
-        JOURNAL_GEOCODAGE.parent.mkdir(parents=True, exist_ok=True)
-        with JOURNAL_GEOCODAGE.open("a", encoding="utf-8") as f:
-            f.write(json.dumps({"date": datetime.now().isoformat(timespec="seconds"), "requete": texte,
-                                "candidats": candidats, "choisi": choisi["nom"]}, ensure_ascii=False) + "\n")
-    except OSError:
-        pass
-    return choisi
-
-
-def localiser_zone(zone: str) -> Optional[tuple[float, float]]:
-    """Zones déjà connues dans la mémoire d'abord, sinon IGN + choix du plus probable."""
-    for z in MEMOIRE.get("zones", []):
-        if normaliser(zone) in [normaliser(a) for a in [z["nom"], *z.get("alias", [])]]:
-            print(f"   [{zone!r} -> zone connue {z['nom']}]")
-            return z["lat"], z["lon"]
-    d = MEMOIRE["domicile"]
-    choisi = choisir_lieu(zone, candidats_ign(zone), (d["lat"], d["lon"]))
-    return (choisi["lat"], choisi["lon"]) if choisi else None
-
-
-def parser_duree(texte: Optional[str]) -> Optional[int]:
-    """'2h 14min' -> 134"""
-    if not texte:
-        return None
-    h = re.search(r"(\d+)\s*h", texte)
-    m = re.search(r"(\d+)\s*min", texte)
-    total = (int(h.group(1)) * 60 if h else 0) + (int(m.group(1)) if m else 0)
-    return total or None
-
-
-def normaliser(texte: str) -> str:
-    sans_accents = unicodedata.normalize("NFKD", texte).encode("ascii", "ignore").decode()
-    return re.sub(r"[^a-z0-9 ]", " ", sans_accents.lower()).strip()
-
-
-VERSIONS = {"ORIGINAL": "VO", "ORIGINAL_ST": "VOST", "DUBBED": "VF", "LOCAL": "VF"}
-
-
-def parser_runtime(valeur) -> Optional[int]:
-    """Durée Allociné en minutes : accepte 6780 (secondes), 113 (minutes), '1h 53min', 'PT1H53M'."""
-    if valeur in (None, "", 0):
-        return None
-    if isinstance(valeur, (int, float)):
-        return int(valeur // 60) if valeur > 600 else int(valeur)
-    texte = str(valeur).upper()
-    h = re.search(r"(\d+)\s*H", texte)
-    m = re.search(r"(\d+)\s*M", texte)
-    total = (int(h.group(1)) * 60 if h else 0) + (int(m.group(1)) if m else 0)
-    return total or (int(texte) // 60 if texte.isdigit() else None)
-
-
-class SourceAllocine:
-    """Séances réelles via la bibliothèque non officielle allocine-seances (testé avec 0.0.14)."""
-
-    # Paris et la petite couronne. Ajoute "Yvelines" etc. au besoin : seuls les manquants sont récupérés.
-    EMPLACEMENTS = ("Paris", "Hauts-de-Seine", "Seine-Saint-Denis", "Val-de-Marne")
-
-    def __init__(self, emplacements=EMPLACEMENTS, cache=Path("data/cinemas_cache.json")):
-        from allocineAPI.allocineAPI import allocineAPI
-        self.api = allocineAPI()
-        self.emplacements = emplacements
-        self.cache = cache
-        self._cinemas: Optional[list[Cinema]] = None
-        self._durees: dict[tuple[str, str], Optional[int]] = {}
-
-    def localiser(self, zone: str) -> Optional[tuple[float, float]]:
-        return localiser_zone(zone)
-
-    def _lire_cache(self) -> tuple[set[str], dict[str, Cinema]]:
-        if not self.cache.exists():
-            return set(), {}
-        donnees = json.loads(self.cache.read_text(encoding="utf-8"))
-        if isinstance(donnees, list):  # ancien format : liste de cinémas seule
-            return set(), {c["id"]: Cinema(**c) for c in donnees}
-        return set(donnees["emplacements"]), {c["id"]: Cinema(**c) for c in donnees["cinemas"]}
-
-    def cinemas(self) -> list[Cinema]:
-        if self._cinemas is not None:
-            return self._cinemas
-        faits, connus = self._lire_cache()
-        manquants = [e for e in self.emplacements if normaliser(e) not in faits]
-        if manquants:
-            print(f"   [récupération des cinémas : {', '.join(manquants)} (une à deux minutes)...]")
-            liste_allocine = list(self.api.get_top_villes()) + list(self.api.get_departements())
-            for nom_cherche in manquants:
-                n = normaliser(nom_cherche)
-                trouves = [e for e in liste_allocine if normaliser(e["name"]) == n] or \
-                          [e for e in liste_allocine if normaliser(e["name"]).startswith(n)]
-                if not trouves:
-                    proches = [e["name"] for e in liste_allocine if n[:4] in normaliser(e["name"])]
-                    print(f"   [{nom_cherche!r} introuvable chez Allociné ; noms proches : {proches[:10]}]")
-                    continue
-                emplacement = trouves[0]
-                avant = len(connus)
-                for c in self.api.get_cinema(emplacement["id"]):
-                    if c["id"] in connus:
-                        continue
-                    adresse = " ".join(c.get("address", "").split())
-                    pos = geocoder_ign(adresse) or (None, None)
-                    connus[c["id"]] = Cinema(id=c["id"], nom=c["name"], adresse=adresse, lat=pos[0], lon=pos[1])
-                    time.sleep(0.05)
-                faits.add(n)
-                print(f"   [{emplacement['name']} ({emplacement['id']}) : {len(connus) - avant} nouveaux cinémas]")
-            if connus:
-                self.cache.parent.mkdir(parents=True, exist_ok=True)
-                self.cache.write_text(json.dumps(
-                    {"emplacements": sorted(faits), "cinemas": [c.__dict__ for c in connus.values()]},
-                    ensure_ascii=False, indent=1), encoding="utf-8")
-            sans_pos = [c.nom for c in connus.values() if c.lat is None]
-            print(f"   [{len(connus)} cinémas au total ; non géocodés : {sans_pos or 'aucun'}]")
-        self._cinemas = list(connus.values())
-        return self._cinemas
-
-    def seances(self, cinema: Cinema, jour: date) -> list[Seance]:
-        try:
-            films = self.api.get_showtime(cinema.id, jour.isoformat())
-        except Exception as e:
-            print(f"   [séances indisponibles pour {cinema.nom} : {e}]")
-            return []
-        resultat = []
-        for f in films:
-            for s in f.get("showtimes", []):
-                debut = datetime.fromisoformat(s["startsAt"])
-                if debut.tzinfo is not None:
-                    debut = debut.astimezone().replace(tzinfo=None)  # heure locale du PC
-                version = VERSIONS.get(s.get("diffusionVersion"), s.get("diffusionVersion") or "?")
-                resultat.append(Seance(cinema, f.get("title", "?"), None, version, debut))
-        return resultat
-
-    def duree(self, seance: Seance) -> Optional[int]:
-        """Durée du film (minutes), demandée seulement pour la séance retenue."""
-        cle = (seance.cinema.id, seance.film)
-        if cle not in self._durees:
-            try:
-                films = self.api.get_movies(seance.cinema.id, seance.debut.date().isoformat())
-                for f in films:
-                    self._durees[(seance.cinema.id, f.get("title"))] = parser_runtime(f.get("runtime"))
-            except Exception as e:
-                print(f"   [durée indisponible : {e}]")
-        return self._durees.get(cle)
-
-
-class SourceFactice:
-    """Séances inventées, pour tester la logique sans réseau. Tout est aujourd'hui."""
-
-    def __init__(self):
-        c1 = Cinema("F1", "Cinéma Factice Edgar-Quinet", "1 rue Factice, 75014 Paris", 48.8410, 2.3245)
-        c2 = Cinema("F2", "Cinéma Factice Rennes", "2 rue Factice, 75006 Paris", 48.8445, 2.3260)
-        c3 = Cinema("F3", "Cinéma Factice Vaugirard", "3 rue Factice, 75015 Paris", 48.8400, 2.3150)
-        loin = Cinema("F4", "Cinéma Factice Bastille", "4 rue Factice, 75011 Paris", 48.8530, 2.3690)
-        self._cinemas = [c1, c2, c3, loin]
-        j = date.today()
-        h = lambda hh, mm: datetime(j.year, j.month, j.day, hh, mm)
-        self._seances = [
-            Seance(c1, "Moulin", 118, "VF", h(19, 45)),
-            Seance(c1, "Moulin", 118, "VO", h(22, 0)),
-            Seance(c2, "Moulin", 118, "VO", h(22, 5)),
-            Seance(c2, "Les Moulins de Paris", 95, "VF", h(20, 30)),
-            Seance(c3, "Moulin", 118, "VF", h(20, 15)),
-            Seance(loin, "Moulin", 118, "VF", h(22, 0)),
-        ]
-
-    def localiser(self, zone: str) -> Optional[tuple[float, float]]:
-        return {"montparnasse": (48.8427, 2.3211)}.get(normaliser(zone))
-
-    def cinemas(self) -> list[Cinema]:
-        return self._cinemas
-
-    def duree(self, seance: Seance) -> Optional[int]:
-        return seance.duree_min
-
-    def seances(self, cinema: Cinema, jour: date) -> list[Seance]:
-        return [s for s in self._seances if s.cinema.id == cinema.id and s.debut.date() == jour]
-
-
-# =============================================================================
-# 5. Résolveurs
-# =============================================================================
-def demander_console(question: str, options: list[str]) -> Optional[int]:
-    """Pose une question à choix. Renvoie l'index choisi, ou None pour 'aucun'."""
+def choix(question: str, options: list[str]) -> Optional[int]:
+    """Question à choix : renvoie l'index choisi, ou None pour 'aucun'."""
     print(f"\n   ? {question}")
     for i, o in enumerate(options, 1):
         print(f"     {i}. {o}")
-    print("     0. aucun")
+    print("     0. aucun (ou Entrée)")
     while True:
-        rep = input("   > ").strip()
+        rep = texte("numéro") or "0"
         if rep.isdigit() and 0 <= int(rep) <= len(options):
             return int(rep) - 1 if int(rep) else None
         print("   (tape un numéro)")
 
 
-def resoudre_memoire(sortie: SortieModele) -> Evenement:
-    confiance = 1.0
-    if sortie.lieu_id is None:
-        confiance -= 0.4
-    if sortie.debut is None:
-        confiance -= 0.4
-    if sortie.question:
-        confiance -= 0.1
-    lieu_id = sortie.lieu_id.value if sortie.lieu_id else None
-    return Evenement(
-        activite=sortie.activite,
-        titre=sortie.titre,
-        lieu_id=lieu_id,
-        lieu_nom=ENTREES_MEMOIRE.get(lieu_id) if lieu_id else sortie.zone,
-        debut=sortie.debut,
-        fin=sortie.fin,
-        horaire_flexible=sortie.heure_dite is None,
-        confiance=round(max(confiance, 0.0), 2),
-        question=sortie.question,
-        raisonnement=sortie.raisonnement,
-    )
+# ============================================================================ affichage
+def nom_lieu(memoire: Memoire, lieu_id: Optional[str]) -> str:
+    if not lieu_id:
+        return "lieu inconnu"
+    e = memoire.entite(lieu_id)
+    if e is None:
+        return lieu_id
+    return f"chez {e['nom']}" if lieu_id.startswith("contact_") else e["nom"]
 
 
-def _dans_plage(d: datetime, plage: str) -> bool:
-    debut, fin = PLAGES[plage]
-    return debut <= d.strftime("%H:%M") <= fin
+def resume(a: Analyse, memoire: Memoire) -> str:
+    morceaux = [a.titre or NOMS_ACTIVITES.get(a.activite, a.activite.capitalize()), nom_lieu(memoire, a.lieu_id)]
+    if a.date:
+        d = date.fromisoformat(a.date)
+        morceaux.append(f"{JOURS[d.weekday()]} {d:%d/%m}")
+    if a.debut:
+        morceaux.append(f"{a.heure_debut} → {a.heure_fin}" if a.heure_fin else f"à {a.heure_debut}")
+    return " · ".join(morceaux)
 
 
-def resoudre_cinema(sortie: SortieModele, source, maintenant: datetime,
-                    demander: Callable[[str, list[str]], Optional[int]] = demander_console) -> Optional[Evenement]:
-    if not sortie.film:
-        print("   Quel film veux-tu voir ? (redis la phrase avec le titre)")
-        return None
-    if not sortie.zone:
-        print("   Dans quel quartier ? (redis la phrase avec le lieu)")
-        return None
+# ============================================================================ géocodage interactif
+def reference(memoire: Memoire) -> tuple[float, float]:
+    d = memoire.domicile
+    return (d["lat"], d["lon"]) if d else geo.PARIS
 
-    jour = date.fromisoformat(sortie.date) if sortie.date else maintenant.date()
 
-    # Cinémas de la zone
-    pos = source.localiser(sortie.zone)
-    if pos is None:
-        print(f"   Je ne trouve pas où est {sortie.zone!r}.")
-        return None
-    distances = {c.id: distance_km(*pos, c.lat, c.lon) for c in source.cinemas() if c.lat is not None}
-    tous = {c.id: c for c in source.cinemas()}
-    seances = []
-    for rayon in RAYONS_KM:
-        proches = sorted((i for i, d in distances.items() if d <= rayon), key=distances.get)
-        if not proches:
-            continue
-        print(f"   [{len(proches)} cinéma(s) à moins de {rayon} km : "
-              + ", ".join(f"{tous[i].nom} ({distances[i]:.1f} km)" for i in proches) + "]")
-        # Séances du jour (pas celles déjà passées)
-        seances = [s for i in proches for s in source.seances(tous[i], jour) if s.debut >= maintenant]
-        if any(fuzz.token_set_ratio(normaliser(sortie.film), normaliser(s.film)) >= SEUIL_TITRE for s in seances):
-            break  # le film passe près d'ici : inutile d'élargir
-    if not distances or not seances:
-        print(f"   Aucune séance trouvée à moins de {RAYONS_KM[-1]} km de {sortie.zone} le {jour:%d/%m}.")
-        return None
-
-    # Film : correspondance approximative du titre
-    demande = normaliser(sortie.film)
-    titres = sorted({s.film for s in seances})
-    exacts = [t for t in titres if normaliser(t) == demande]
-    # moyenne de la similarité du titre entier et des mots en commun
-    scores = {t: (fuzz.ratio(demande, normaliser(t)) + fuzz.token_set_ratio(demande, normaliser(t))) / 2
-              for t in titres}
-    meilleur = max(scores.values(), default=0)
-    # on garde les titres au-dessus du seuil ET proches du meilleur (évite "Moulin" pour "moulins de paris")
-    candidats = exacts or [t for t, s in scores.items() if s >= SEUIL_TITRE and s >= meilleur - 5]
+def chercher_adresse(adresse: str, memoire: Memoire) -> Optional[dict]:
+    candidats = geo.classer(geo.candidats_ign(adresse, index=("address",), limite=5), reference(memoire))
     if not candidats:
-        print(f"   Aucun film proche de {sortie.film!r} près de {sortie.zone} le {jour:%d/%m}.")
-        print(f"   À l'affiche près d'ici : {', '.join(titres[:15])}")
+        print("   Adresse introuvable.")
         return None
-    if len(candidats) > 1:
-        i = demander("Quel film ?", candidats)
+    if len(candidats) == 1 or candidats[0]["score"] > 0.85:
+        return candidats[0] if oui(f"C'est bien : {candidats[0]['nom']} ?") else None
+    i = choix("Laquelle ?", [f"{c['nom']} ({c['km']:.1f} km)" for c in candidats[:5]])
+    return None if i is None else candidats[i]
+
+
+def demander_domicile(memoire: Memoire) -> None:
+    print("\n   Je ne connais pas encore ton adresse. Elle sert de point de départ et à choisir")
+    print("   le bon lieu parmi les homonymes. Elle reste sur ton ordinateur (data/memoire).")
+    adresse = texte("Ton adresse (Entrée pour passer)")
+    if adresse:
+        c = chercher_adresse(adresse, memoire)
+        if c:
+            memoire.definir_domicile(c["nom"], c["lat"], c["lon"], source="reponse")
+            print("   [mémoire : domicile enregistré]")
+
+
+def nouveau_lieu(a: Analyse, dit: Optional[str], memoire: Memoire) -> bool:
+    recherche = texte(f"Comment s'appelle ce lieu, ou son adresse ?{f' [{dit}]' if dit else ''}") or dit
+    if not recherche:
+        return False
+    candidats = geo.classer(geo.candidats_nominatim(recherche) + geo.candidats_ign(recherche, index=("address",)),
+                            reference(memoire))
+    # Lieux nommés (OpenStreetMap) avant les simples adresses, puis du plus proche au plus loin
+    candidats = sorted(candidats, key=lambda c: (c["km"] > geo.DISTANCE_MAX_KM, c["source"] != "osm", c["km"]))[:6]
+    if not candidats:
+        print("   Rien trouvé. Essaie avec le nom complet ou l'adresse.")
+        return False
+    i = choix("Lequel ?", [f"{c['nom']} — {c['adresse'][:70]} ({c['km']:.1f} km)" for c in candidats])
+    geo.journaliser(JOURNAL_GEO, recherche, candidats, None if i is None else candidats[i], par="utilisateur")
+    if i is None:
+        return False
+    c = candidats[i]
+    nom = texte(f"Nom à retenir [{c['nom']}]") or c["nom"]
+    alias = list({normaliser(x): x for x in (dit, recherche) if x and normaliser(x) != normaliser(nom)}.values())
+    lieu = memoire.ajouter_lieu(nom, a.activite, c["lat"], c["lon"], adresse=c["adresse"],
+                                alias=alias, source="reponse")
+    print(f"   [mémoire : nouveau lieu « {nom} » ({a.activite})"
+          + (f", aussi appelé {', '.join(repr(x) for x in alias)}" if alias else "") + "]")
+    a.fixer("lieu_id", lieu["id"], "réponse")
+    return True
+
+
+def adresse_contact(prenom: str, memoire: Memoire) -> Optional[dict]:
+    adresse = texte(f"Où habite {prenom} ? (adresse, ou Entrée pour ne pas la donner)")
+    return chercher_adresse(adresse, memoire) if adresse else None
+
+
+# ============================================================================ questions
+def traiter(m: Manque, a: Analyse, memoire: Memoire, maintenant: datetime) -> bool:
+    """Pose la question `m` et enregistre la réponse. False si l'utilisateur ne répond pas."""
+    if m.champ == "date":
+        rep = texte(m.question)
+        jour = date_dite(rep, maintenant)
+        if jour is None:
+            return False
+        a.fixer("date", jour.isoformat(), "réponse")
+        appliquer_horaire(a, rep)
+        return True
+
+    if m.champ == "heure":
+        rep = texte(m.question)
+        return bool(rep) and appliquer_horaire(a, rep)
+
+    if m.champ in ("film", "zone"):
+        rep = texte(m.question)
+        if rep:
+            a.fixer(m.champ, rep, "réponse")
+        return bool(rep)
+
+    if m.champ in ("lieu_choix", "lieu"):
+        options = [memoire.entite(i) for i in m.options]
+        if options:
+            question = m.question if m.champ == "lieu_choix" else f"{m.question} L'un de ceux-là ?"
+            i = choix(question, [o["nom"] for o in options] + ["un autre lieu"])
+            if i is None:
+                return False
+            if i < len(options):
+                a.fixer("lieu_id", options[i]["id"], "réponse")
+                return True
+        else:
+            print(f"   ? {m.question}")
+        return nouveau_lieu(a, m.texte, memoire)
+
+    if m.champ == "contact_choix":
+        options = [memoire.entite(i) for i in m.options]
+        i = choix(m.question, [f"{o['nom']} ({o.get('adresse') or 'adresse inconnue'})" for o in options])
         if i is None:
-            return None
-        film = candidats[i]
+            return False
+        a.fixer("lieu_id", options[i]["id"], "réponse")
+        return True
+
+    if m.champ == "contact":
+        print(f"   Je ne connais pas encore {m.texte}.")
+        c = adresse_contact(m.texte, memoire)
+        contact = memoire.ajouter_contact(m.texte, adresse=c and c["nom"], lat=c and c["lat"], lon=c and c["lon"],
+                                          source="reponse")
+        print(f"   [mémoire : nouveau contact « {m.texte} »{'' if c else ' (sans adresse : pas de trajet possible)'}]")
+        a.fixer("lieu_id", contact["id"], "réponse")
+        return True
+
+    if m.champ == "contact_adresse":
+        contact = memoire.entite(m.options[0])
+        c = adresse_contact(contact["nom"], memoire)
+        if not c:
+            return False
+        memoire.modifier(contact["id"], adresse=c["nom"], lat=c["lat"], lon=c["lon"], source="reponse")
+        print(f"   [mémoire : adresse de {contact['nom']} enregistrée]")
+        return True
+
+    if m.champ == "domicile":
+        demander_domicile(memoire)
+        return memoire.domicile is not None
+
+    return False
+
+
+def poser_questions(a: Analyse, memoire: Memoire, connaissances, maintenant: datetime) -> None:
+    refusees: set[str] = set()
+    for _ in range(10):
+        restantes = [m for m in a.manques if m.champ not in refusees]
+        if not restantes:
+            return
+        if not traiter(restantes[0], a, memoire, maintenant):
+            refusees.add(restantes[0].champ)
+        completer(a, memoire, connaissances)
+
+
+# ============================================================================ apprentissage
+def proposer_alias(mot: Optional[str], entite_id: Optional[str], memoire: Memoire) -> None:
+    """Le mot dit ne désignait pas encore ce lieu / ce contact : on propose de le retenir."""
+    entite = memoire.entite(entite_id) if entite_id else None
+    if not mot or entite is None or entite_id == "domicile" or normaliser(mot) in Memoire.textes(entite):
+        return
+    if oui(f"Retenir que « {mot} » = {entite['nom']} ?"):
+        memoire.ajouter_alias(entite_id, mot, source="choix")
+        print(f"   [mémoire : « {mot} » ajouté pour {entite['nom']}]")
+
+
+def enregistrer(a: Analyse, memoire: Memoire, connaissances) -> None:
+    debut = datetime.fromisoformat(a.debut)
+    fin = datetime.fromisoformat(a.fin) if a.fin else None
+    corrige = "correction" in a.origines.values()
+    obs = memoire.observer(a.activite, a.lieu_id, debut, fin, plage=connaissances.plage_de(a.heure_debut),
+                           source="correction" if corrige else "confirmation")
+    memoire.marquer_utilise(a.lieu_id)
+    duree = f", {obs['duree_min']} min" if obs["duree_min"] else ""
+    print(f"   [mémoire : {a.activite} le {obs['jour']} à {obs['debut']}{duree} ({obs['source']})]")
+    if a.lieu_id and a.lieu_id.startswith("contact_"):
+        proposer_alias(a.chez, a.lieu_id, memoire)
     else:
-        film = candidats[0]
-    seances = [s for s in seances if s.film == film]
+        proposer_alias(a.zone, a.lieu_id, memoire)
 
-    # Horaire
-    if sortie.heure:
-        cible = datetime.combine(jour, datetime.strptime(sortie.heure, "%H:%M").time())
-        filtrees = [s for s in seances if abs((s.debut - cible).total_seconds()) <= TOLERANCE_HEURE_MIN * 60]
-        contrainte = f"vers {sortie.heure}"
-    elif sortie.plage:
-        filtrees = [s for s in seances if _dans_plage(s.debut, sortie.plage)]
-        contrainte = f"le {sortie.plage}"
+
+def valider(a: Analyse, memoire: Memoire, connaissances, maintenant: datetime) -> None:
+    while True:
+        if a.debut is None:
+            print("   Je n'ai pas de quoi proposer un créneau (jour ou heure manquant).")
+            return
+        print(f"\n   → {resume(a, memoire)}")
+        pourquoi = expliquer(a, memoire)
+        if pourquoi:
+            print(f"     ({pourquoi})")
+        rep = texte("Entrée : valider · h : changer l'horaire · l : changer le lieu · n : annuler").lower()
+        if rep in ("", "o", "oui"):
+            enregistrer(a, memoire, connaissances)
+            return
+        if rep == "n":
+            print("   Annulé, rien n'est enregistré.")
+            return
+        if rep == "h":
+            heures = texte("Nouvel horaire (ex. 19h30, de 19h à 21h30)")
+            if appliquer_horaire(a, heures, origine="correction"):
+                completer(a, memoire, connaissances)
+        elif rep == "l":
+            a.origines.pop("lieu_id", None)
+            categorie = [l["id"] for l in memoire.lieux(a.activite)]
+            if traiter(Manque("lieu", "Où ça ?", categorie, a.zone), a, memoire, maintenant):
+                a.origines["lieu_id"] = "correction"
+            completer(a, memoire, connaissances)
+
+
+def cinema(a: Analyse, source, memoire: Memoire, connaissances, maintenant: datetime, apprendre: bool) -> None:
+    choisi = cine.resoudre_cinema(a, source, memoire, connaissances, maintenant, choix, JOURNAL_GEO,
+                                  demander_texte=texte if apprendre else None)
+    if choisi is None:
+        return
+    s = choisi.seance
+    print(f"\n   → {s.film} ({s.version}) · {s.cinema.nom} · {JOURS[s.debut.weekday()]} {s.debut:%d/%m}"
+          f" · {s.debut:%H:%M} → {choisi.fin:%H:%M}")
+    if not apprendre or not oui("Valider ?"):
+        return
+    ref = cine.ref_cinema(source, s.cinema)
+    lieu = memoire.lieu_par_ref(ref) or memoire.ajouter_lieu(
+        s.cinema.nom, "cinema", s.cinema.lat, s.cinema.lon, adresse=s.cinema.adresse, ref=ref, source="choix")
+    nouvelle_zone = not memoire.chercher(choisi.zone, types=("zones",))
+    if nouvelle_zone:
+        memoire.ajouter_zone(choisi.zone, *choisi.zone_pos, source="confirmation")
+    memoire.observer("cinema", lieu["id"], s.debut, choisi.fin, plage=connaissances.plage_de(f"{s.debut:%H:%M}"))
+    memoire.marquer_utilise(lieu["id"])
+    print(f"   [mémoire : séance à {lieu['nom']} enregistrée"
+          + (f" ; zone « {choisi.zone} » retenue" if nouvelle_zone else "") + "]")
+
+
+# ============================================================================ programme
+def traiter_phrase(phrase: str, memoire: Memoire, connaissances, source, modele: str, apprendre: bool) -> None:
+    maintenant = datetime.now()
+    a = analyser(phrase, maintenant, memoire, connaissances, lambda p: comprendre(p, modele))
+    compris = {k: v for k, v in a.en_dict().items()
+               if v not in (None, [], {}, "") and k in ("activite", "zone", "chez", "avec", "film", "date", "plage", "lieu_id")}
+    print(f"   compris : {compris}")
+    if not apprendre:
+        print(f"   → {resume(a, memoire)}" + (f"\n   ? {a.question}" if a.question else ""))
+        if a.activite == "cinema" and not a.manques:
+            cinema(a, source, memoire, connaissances, maintenant, apprendre=False)
+        return
+    poser_questions(a, memoire, connaissances, maintenant)
+    if a.activite == "cinema":
+        cinema(a, source, memoire, connaissances, maintenant, apprendre=True)
     else:
-        filtrees, contrainte = seances, ""
+        valider(a, memoire, connaissances, maintenant)
 
-    if not filtrees:
-        print(f"   Pas de séance de {film} {contrainte} près de {sortie.zone}.")
-        if not seances:
-            return None
-        options = [f"{s.debut:%H:%M} — {s.cinema.nom} ({s.version})" for s in sorted(seances, key=lambda s: s.debut)]
-        i = demander("Autres séances ce jour-là :", options)
-        if i is None:
-            return None
-        filtrees = [sorted(seances, key=lambda s: s.debut)[i]]
 
-    # Cinéma, puis séance
-    filtrees.sort(key=lambda s: distances[s.cinema.id])
-    cinemas = list(dict.fromkeys(s.cinema.nom for s in filtrees))  # du plus proche au plus loin
-    if len(cinemas) > 1:
-        km = {s.cinema.nom: distances[s.cinema.id] for s in filtrees}
-        options = [f"{nom} ({km[nom]:.1f} km) — "
-                   + ", ".join(f"{s.debut:%H:%M} {s.version}" for s in filtrees if s.cinema.nom == nom)
-                   for nom in cinemas]
-        i = demander(f"Plusieurs cinémas passent {film} {contrainte}. Lequel ?", options)
-        if i is None:
-            return None
-        filtrees = [s for s in filtrees if s.cinema.nom == cinemas[i]]
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--discuter", action="store_true", help="dialogue : questions, réponses, mémoire qui apprend")
+    parser.add_argument("-p", "--phrase", action="append", help="phrase à analyser (répétable), sans rien enregistrer")
+    parser.add_argument("--faux", action="store_true", help="séances de cinéma factices au lieu d'Allociné")
+    parser.add_argument("--memoire", type=Path, help="fichier mémoire (défaut : data/memoire/memoire.json ; "
+                                                      "avec --faux : data/memoire/memoire_test.json)")
+    parser.add_argument("--modele", default=MODELE)
+    args = parser.parse_args()
+    if not args.discuter and not args.phrase:
+        parser.error("indique --discuter ou -p \"une phrase\"")
 
-    filtrees.sort(key=lambda s: s.debut)
-    if len(filtrees) > 1:
-        i = demander("Quelle séance ?", [f"{s.debut:%H:%M} ({s.version})" for s in filtrees])
-        if i is None:
-            return None
-        seance = filtrees[i]
+    if args.memoire is None:  # les séances factices ne doivent pas polluer la vraie mémoire
+        args.memoire = DATA / "memoire" / ("memoire_test.json" if args.faux else "memoire.json")
+    memoire = Memoire(args.memoire, lecture_seule=not args.discuter)
+    connaissances = charger_connaissances()
+    if args.faux:
+        source = cine.SourceFactice()
+    elif load_settings().api_cinema_key:
+        source = cine.SourceApiCinema(load_settings().api_cinema_key, cache_dir=DATA / "cache" / "api_cinema")
     else:
-        seance = filtrees[0]
+        source = cine.SourceFactice()
+        print("Pas de clé API_CINEMA_KEY dans .env : séances factices.")
+    print(f"Mémoire : {args.memoire} — {memoire.resume()}")
 
-    duree = seance.duree_min or source.duree(seance)
-    if duree is None:
-        print("   [durée du film inconnue : 2h par défaut]")
-    fin = seance.debut + timedelta(minutes=PUBS_MIN + (duree or 120))
-    return Evenement(
-        activite="cinema",
-        titre=f"{film} ({seance.version})",
-        lieu_id=f"cinema_{seance.cinema.id}",
-        lieu_nom=seance.cinema.nom,
-        adresse=seance.cinema.adresse,
-        lat=seance.cinema.lat,
-        lon=seance.cinema.lon,
-        debut=seance.debut.strftime("%Y-%m-%dT%H:%M"),
-        fin=fin.strftime("%Y-%m-%dT%H:%M"),
-        horaire_flexible=False,
-        confiance=1.0,
-        raisonnement=sortie.raisonnement,
-    )
+    if args.phrase:
+        for phrase in args.phrase:
+            print(f"\n>>> {phrase}")
+            traiter_phrase(phrase, memoire, connaissances, source, args.modele, apprendre=False)
+        return
 
+    if memoire.domicile is None:
+        demander_domicile(memoire)
+    print("\nDis-moi ce que tu vas faire (Entrée pour quitter, « mémoire » pour voir ce que je sais).")
+    while True:
+        try:
+            phrase = input("\nToi > ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if not phrase:
+            break
+        if normaliser(phrase) == "memoire":
+            print(f"   {memoire.resume()} — détail dans {args.memoire}")
+            continue
+        traiter_phrase(phrase, memoire, connaissances, source, args.modele, apprendre=True)
+    print(f"\nÀ bientôt. Mémoire : {memoire.resume()}")
 
-# =============================================================================
-# 6. Programme principal
-# =============================================================================
-RE_HEURE = re.compile(r"\b(\d{1,2})\s*(?:h|heures?)\s*(\d{2})?\b")
-MOTS_PLAGE = [  # ordre important : "après-midi" avant "midi"
-    ("apres-midi", re.compile(r"apr[eè]s[- ]?midi")),
-    ("matin", re.compile(r"\bmatin")),
-    ("midi", re.compile(r"\bmidi\b")),
-    ("soir", re.compile(r"\bsoir")),
-    ("nuit", re.compile(r"\bnuit\b")),
-]
-
-
-def verifier_horaire(sortie: SortieModele, phrase: str) -> SortieModele:
-    """Le code vérifie l'heure et la plage dans la phrase elle-même : plus fiable qu'un petit modèle."""
-    texte = phrase.lower()
-    m = RE_HEURE.search(texte)
-    if m and int(m.group(1)) < 24:
-        sortie.heure = f"{int(m.group(1)):02d}:{m.group(2) or '00'}"
-        sortie.heure_dite = m.group(0)
-        sortie.plage = None
-    else:
-        sortie.heure = sortie.heure_dite = None
-        sortie.plage = next((nom for nom, motif in MOTS_PLAGE if motif.search(texte)), sortie.plage)
-    if sortie.activite == "cinema":
-        sortie.question = None  # pour le cinéma, c'est le programme qui pose les questions
-    return sortie
-
-
-def interpreter(phrase: str, source, maintenant: Optional[datetime] = None) -> Optional[Evenement]:
-    maintenant = maintenant or datetime.now()
-    sortie = verifier_horaire(comprendre(phrase, maintenant), phrase)
-    print("   compris :", sortie.model_dump_json(exclude={"raisonnement"}, exclude_none=True))
-    if sortie.activite == "cinema":
-        return resoudre_cinema(sortie, source, maintenant)
-    return resoudre_memoire(sortie)
-
-
-PHRASES_TEST = [
-    "je vais grimper à Pont de Sèvres demain soir",
-    "je vais en soirée chez Nico samedi",
-    "je vais voir Moulin ce soir à Montparnasse",
-    "je vais au cinéma à Montparnasse pour voir le film Moulin à 22h",
-]
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--faux", action="store_true", help="séances factices au lieu d'Allociné")
-    parser.add_argument("-p", "--phrase", action="append", help="phrase à tester (répétable)")
-    args = parser.parse_args()
-
-    source = SourceFactice() if args.faux else SourceAllocine()
-    for phrase in args.phrase or PHRASES_TEST:
-        print(f"\n>>> {phrase}")
-        evt = interpreter(phrase, source)
-        print("   =>", evt.model_dump_json(indent=2, exclude_none=True) if evt else "aucun événement")
+    main()

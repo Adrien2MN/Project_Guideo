@@ -74,6 +74,31 @@ Puis, pour voir l'effet du relief sur tes trajets :
 python scripts\compare_bike.py
 ```
 
+## Interpréteur d'activités et mémoire personnelle
+
+Une phrase comme « je grimpe à Issy lundi soir » devient un événement d'agenda (lieu + créneau), qui servira ensuite au calcul du trajet.
+
+```bat
+pip install -e ".[interpreteur]"
+ollama pull ministral-3:8b-instruct-2512-q4_K_M
+python scripts\test_interpreteur.py --discuter
+```
+
+- **Le LLM (local, via Ollama) comprend le sens** : quelle activité, quels mots désignent le lieu, la personne, le film. Il ne voit jamais la mémoire personnelle, donc aucune adresse.
+- **Le code fait le reste** : il lit le jour et l'heure dans la phrase, retrouve le lieu ou le contact dans la mémoire, complète les horaires et pose une question quand il manque quelque chose.
+- **La mémoire commence vide** (`data\memoire\memoire.json`, hors git) et se remplit avec tes réponses, tes choix et tes corrections. Les habitudes y sont stockées comme des observations (une par activité validée), dont on tire l'heure et la durée habituelles. Chaque modification est tracée dans `data\memoire\journal.jsonl`.
+- **Les connaissances générales** (une soirée commence vers 20h, un déjeuner vers midi...) sont dans `src\guideo\memoire\connaissances_generales.toml`. Elles ne servent que tant qu'aucune habitude personnelle n'existe.
+
+Évaluation, avec une mémoire de test fixe (`tests\eval\memoire_eval.json`) pour que les scores soient comparables :
+
+```bat
+python scripts\eval_interpreteur.py -v
+```
+
+**Données personnelles.** La mémoire contient des adresses de tiers (tes contacts) : elle reste sur la machine et n'est jamais envoyée au LLM. Tout est lisible et modifiable dans le fichier, et `Memoire.supprimer()` efface une entité avec ses observations.
+
+Les séances de cinéma viennent d'une bibliothèque non officielle qui lit le site d'Allociné : usage personnel uniquement.
+
 ## Le modèle de données
 
 | Table | Contenu |
@@ -93,6 +118,8 @@ src/guideo/
   velib/storage.py    stockage SQLite en journal d'événements
   velib/collector.py  boucle de collecte
   prim/client.py      client de l'API Navitia de PRIM
+  memoire/            mémoire personnelle + connaissances générales
+  interpreteur/       phrase -> événement (LLM, lecture du texte, cinéma, géocodage)
 scripts/              vérifications et statistiques rapides
 tests/
 ```

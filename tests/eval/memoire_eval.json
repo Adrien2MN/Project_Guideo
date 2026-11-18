@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "domicile": {"adresse": "Adresse fictive (jeu d'évaluation)", "lat": 48.8566, "lon": 2.3522, "source": "manuel", "maj_le": "2026-11-01T00:00:00"},
+  "lieux": [
+    {"id": "arkose_pont_de_sevres", "nom": "Arkose Pont de Sèvres", "categorie": "escalade",
+     "adresse": null, "lat": 48.8296, "lon": 2.2337, "ref": null,
+     "alias": [{"texte": "Pont de Sèvres", "source": "manuel", "ajoute_le": "2026-11-01T00:00:00"}],
+     "source": "manuel", "cree_le": "2026-11-01T00:00:00", "utilise_le": null, "nb_utilisations": 0},
+    {"id": "arkose_issy_voie", "nom": "Arkose Issy (voie)", "categorie": "escalade",
+     "adresse": null, "lat": 48.8263, "lon": 2.2745, "ref": null,
+     "alias": [{"texte": "Issy", "source": "manuel", "ajoute_le": "2026-11-01T00:00:00"},
+               {"texte": "Arkose Issy", "source": "manuel", "ajoute_le": "2026-11-01T00:00:00"}],
+     "source": "manuel", "cree_le": "2026-11-01T00:00:00", "utilise_le": null, "nb_utilisations": 0}
+  ],
+  "contacts": [
+    {"id": "contact_nico", "nom": "Nico", "adresse": "Adresse fictive", "lat": 48.8420, "lon": 2.3200,
+     "alias": [], "source": "manuel", "cree_le": "2026-11-01T00:00:00", "utilise_le": null, "nb_utilisations": 0},
+    {"id": "contact_parents", "nom": "mes parents", "adresse": "Adresse fictive", "lat": 48.8700, "lon": 2.2800,
+     "alias": [{"texte": "parents", "source": "manuel", "ajoute_le": "2026-11-01T00:00:00"}],
+     "source": "manuel", "cree_le": "2026-11-01T00:00:00", "utilise_le": null, "nb_utilisations": 0}
+  ],
+  "zones": [],
+  "observations": [
+    {"activite": "escalade", "lieu_id": "arkose_pont_de_sevres", "date": "2026-10-27", "jour": "mardi", "plage": "soir",
+     "debut": "19:00", "fin": "21:00", "duree_min": 120, "source": "manuel", "le": "2026-11-01T00:00:00"},
+    {"activite": "escalade", "lieu_id": "arkose_issy_voie", "date": "2026-10-26", "jour": "lundi", "plage": "soir",
+     "debut": "19:00", "fin": "21:00", "duree_min": 120, "source": "manuel", "le": "2026-11-01T00:00:00"},
+    {"activite": "escalade", "lieu_id": "arkose_pont_de_sevres", "date": "2026-10-29", "jour": "jeudi", "plage": "soir",
+     "debut": "19:00", "fin": "21:00", "duree_min": 120, "source": "manuel", "le": "2026-11-01T00:00:00"},
+    {"activite": "escalade", "lieu_id": "arkose_issy_voie", "date": "2026-11-02", "jour": "lundi", "plage": "soir",
+     "debut": "19:00", "fin": "21:00", "duree_min": 120, "source": "manuel", "le": "2026-11-01T00:00:00"}
+  ]
+}
